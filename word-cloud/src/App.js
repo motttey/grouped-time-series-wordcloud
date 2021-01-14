@@ -1,23 +1,20 @@
 import logo from './logo.svg';
 import './App.css';
+import React, { Component } from 'react'
+import Chart from './Chart'
 
 function App() {
+  const data = [
+    { word: "A", size: 45},
+    { word: "B", size: 34},
+    { word: "D", size: 20}
+  ]
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div id="container">
+        <h2>React D3.js line chart</h2>
+        <Chart data={data} />
+      </div>
     </div>
   );
 }
