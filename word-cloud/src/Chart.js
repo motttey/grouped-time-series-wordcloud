@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import * as d3 from 'd3';
 import * as d3_cloud from 'd3-cloud';
 
@@ -6,15 +6,16 @@ function Chart(props) {
   const width = 800;
   const height = 800;
   const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+  console.log("aa");
+
+  const svg = d3.select("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    
+  svg.select("g").attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
 
   function createChart(data) {
-    const svg = d3.select("svg").append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-      .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
-
     const layout = d3_cloud()
       .size([width, height])
       .words(data.map(function (d) {
@@ -32,19 +33,20 @@ function Chart(props) {
     layout.start();
 
     function draw(words) {
-     svg
-      .append("g")
-      .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
-       .selectAll("text")
-       .data(words)
-       .enter().append("text")
-       .style("font-size", function (d) { return d.size; })
-       .attr("fill", function (d) { return d.color;} )
-       .attr("text-anchor", "middle")
-       .style("font-family", "Impact")
-       .attr("transform", function (d) {
-           return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-       })
+      const updateText = svg.select("g").selectAll("text")
+        .data(words);
+
+      const enterText = updateText
+        .enter().append("text");
+
+      enterText.merge(updateText)
+        .style("font-size", function (d) { return d.size; })
+        .attr("fill", function (d) { return d.color;} )
+        .attr("text-anchor", "middle")
+        .style("font-family", "Impact")
+        .attr("transform", function (d) {
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
        .text(function (d) { return d.text; });
     }
   };
@@ -56,7 +58,9 @@ function Chart(props) {
   return (
     <svg
       style={{ width: width, height: height }}
-    ></svg>
+    >
+      <g id="wordCloud"> </g>
+    </svg>
   );
 }
 export default Chart;
