@@ -3,18 +3,20 @@ import * as d3 from 'd3';
 import * as d3_cloud from 'd3-cloud';
 
 function Chart(props) {
-  const width = 800;
-  const height = 800;
+  const width = 600;
+  const height = 400;
   const margin = { top: 50, right: 50, bottom: 50, left: 50 };
   console.log("aa");
 
   const svg = d3.select("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
-    
-  svg.select("g").attr("transform",
-        "translate(" + margin.left + "," + margin.top + ")");
 
+  svg.select("g").attr("transform",
+        "translate(" + width/2 + "," + height/2 + ")");
+
+  createChart(props.data);
+  
   function createChart(data) {
     const layout = d3_cloud()
       .size([width, height])
@@ -40,6 +42,7 @@ function Chart(props) {
         .enter().append("text");
 
       enterText.merge(updateText)
+        .transition(1000)
         .style("font-size", function (d) { return d.size; })
         .attr("fill", function (d) { return d.color;} )
         .attr("text-anchor", "middle")

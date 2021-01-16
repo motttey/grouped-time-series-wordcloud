@@ -1,5 +1,5 @@
 import './App.css';
-import React, { Component, useState } from 'react'
+import React, { useState } from 'react'
 import Chart from './Chart'
 import useInterval from 'use-interval'
 const rand_max = 20;
@@ -7,6 +7,7 @@ const rand_max = 20;
 function App() {
   let data = [
     { word: "A", size: 45},
+    { word: "B", size: 34},
     { word: "C", size: 34},
     { word: "D", size: 20}
   ];
@@ -22,9 +23,8 @@ function App() {
   }
   const interval = useInterval(function(){
     const newData = getData();
-    console.log(newData);
     setDataState(newData);
-  }, 1000);
+  }, 2500);
 
   return (
     <div className="App">
