@@ -6,10 +6,24 @@ const rand_max = 20;
 
 function App() {
   let data = [
-    { word: "A", size: 45},
-    { word: "B", size: 34},
-    { word: "C", size: 34},
-    { word: "D", size: 20}
+    {
+      word: "groupA",
+      children: [
+        { word: "A", size: 45},
+        { word: "B", size: 34},
+        { word: "C", size: 34},
+        { word: "D", size: 20}
+      ]
+    },
+    {
+      word: "groupB",
+      children: [
+        { word: "A", size: 45},
+        { word: "B", size: 34},
+        { word: "C", size: 34},
+        { word: "D", size: 20}
+      ]
+    }
   ];
 
   const [ dataState, setDataState ] = useState(data);
@@ -17,7 +31,12 @@ function App() {
     return data.map((d) => {
       return {
         word: d.word,
-        size: d.size + parseInt(Math.random() * rand_max) - rand_max/2
+        children: d.children.map((c) => {
+          return {
+            word: c.word,
+            size: c.size + parseInt(Math.random() * rand_max) - rand_max/2
+          }
+        })
       }
     });
   }

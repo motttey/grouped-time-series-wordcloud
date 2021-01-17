@@ -6,7 +6,6 @@ function Chart(props) {
   const width = 600;
   const height = 400;
   const margin = { top: 50, right: 50, bottom: 50, left: 50 };
-  console.log("aa");
 
   const svg = d3.select("svg")
     .attr("width", width + margin.left + margin.right)
@@ -15,9 +14,9 @@ function Chart(props) {
   svg.select("g").attr("transform",
         "translate(" + width/2 + "," + height/2 + ")");
 
-  createChart(props.data);
-  
-  function createChart(data) {
+  createWordCloud(props.data[0].children);
+
+  function createWordCloud(data) {
     const layout = d3_cloud()
       .size([width, height])
       .words(data.map(function (d) {
@@ -55,7 +54,7 @@ function Chart(props) {
   };
 
   useEffect(() => {
-    createChart(props.data);
+    createWordCloud(props.data[0].children);
   });
 
   return (
