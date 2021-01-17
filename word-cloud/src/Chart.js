@@ -12,8 +12,8 @@ function Chart(props) {
     .attr("height", height + margin.top + margin.bottom)
 
   svg.select("g#wordCloud")
-    .attr("transform",
-        "translate(" + width/2 + "," + height/2 + ")");
+    .style("width", width)
+    .style("height", height);
 
   svg.select("g#treemap")
     .attr("transform",
@@ -21,7 +21,6 @@ function Chart(props) {
     .style("width", width)
     .style("height", height);
 
-  drawWordCloud(props.data.children[0].children);
   drawTreemap(props.data);
 
   function drawTreemap(data) {
@@ -48,6 +47,7 @@ function Chart(props) {
 
     treemap(root);
 
+    /*
     const updateNode = svg.select("g#treemap")
       .selectAll("g.node")
       .data(root.leaves());
@@ -59,6 +59,7 @@ function Chart(props) {
     const g = enterNode.merge(updateNode)
       .transition(1000)
       .attr("transform", function(d) { return "translate(" + d.x0 + "," + (d.y0) + ")"; });
+    */
 
     const updateRect = svg.select("g#treemap").selectAll("rect")
       .data(root.leaves());
@@ -69,16 +70,69 @@ function Chart(props) {
 
     enterRect.merge(updateRect)
       .transition(1000)
+      .attr("transform", function(d) { return "translate(" + d.x0 + "," + (d.y0) + ")"; })
       .attr("width", function(d) { return d.x1 - d.x0; })
       .attr("height", function(d) { return d.y1 - d.y0; })
       .style("fill", function(d, i) {
         return d3.schemeCategory10[i];
       })
-      .style("opacity", 0.6);
+      .style("opacity", 0.6)
+      .each((d, i) => {
+        console.log(d);
+        drawWordCloudFromTreemap(data, d, i);
+      });
+  }
+
+  function drawWordCloudFromTreemap(data, treeMapData, index) {
+    const targetData = data.children[index];
+    const treeMapWidth = treeMapData.x1 - treeMapData.x0;
+    const treeMapHeight = treeMapData.y1 - treeMapData.y0;
+
+    const layout = d3_cloud()
+      .size([treeMapWidth, treeMapHeight])
+      .words(targetData.children.map(function (d) {
+        return {
+          text: d.word,
+          size: d.size,
+          color: "gray" };
+        }
+      ))
+      .padding(5)
+      .rotate(0)
+      .fontSize(function (d) { return d.size; })
+      .on("end", draw);
+
+    const targetId = "g#" + treeMapData.data.word;
+    const treeMapG = svg.select("g#word_cloud").selectAll(targetId)
+      .data(treeMapData)
+      .enter().append("g")
+      .attr("id", treeMapData.data.word)
+      .attr("transform",
+          "translate(" + (treeMapData.x0 + treeMapWidth/2) + "," + (treeMapData.y0 + treeMapHeight/2) + ")");
+
+    layout.start();
+
+    function draw(words) {
+      const updateText = svg.select("g#word_cloud").selectAll(targetId).selectAll("text")
+        .data(words);
+
+      const enterText = updateText
+        .enter().append("text");
+
+      enterText.merge(updateText)
+        .transition(1000)
+        .style("font-size", function (d) { return d.size; })
+        .attr("fill", function (d) { return d.color;} )
+        .attr("text-anchor", "middle")
+        .style("font-family", "Impact")
+        .attr("transform", function (d) {
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+       .text(function (d) { return d.text; });
+    }
   }
 
   function drawWordCloud(data) {
-    console.log(data);
     const layout = d3_cloud()
       .size([width, height])
       .words(data.map(function (d) {
@@ -116,7 +170,6 @@ function Chart(props) {
   };
 
   useEffect(() => {
-    drawWordCloud(props.data.children[0].children);
     drawTreemap(props.data);
   });
 
@@ -124,8 +177,8 @@ function Chart(props) {
     <svg
       style={{ width: width, height: height }}
     >
-      <g id="word_cloud"> </g>
       <g id="treemap"> </g>
+      <g id="word_cloud"> </g>
     </svg>
   );
 }
