@@ -132,43 +132,6 @@ function Chart(props) {
     }
   }
 
-  function drawWordCloud(data) {
-    const layout = d3_cloud()
-      .size([width, height])
-      .words(data.map(function (d) {
-        return {
-          text: d.word,
-          size: d.size,
-          color: "gray" };
-        }
-      ))
-      .padding(5)
-      .rotate(0)
-      .fontSize(function (d) { return d.size; })
-      .on("end", draw);
-
-    layout.start();
-
-    function draw(words) {
-      const updateText = svg.select("g#word_cloud").selectAll("text")
-        .data(words);
-
-      const enterText = updateText
-        .enter().append("text");
-
-      enterText.merge(updateText)
-        .transition(1000)
-        .style("font-size", function (d) { return d.size; })
-        .attr("fill", function (d) { return d.color;} )
-        .attr("text-anchor", "middle")
-        .style("font-family", "Impact")
-        .attr("transform", function (d) {
-          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-        })
-       .text(function (d) { return d.text; });
-    }
-  };
-
   useEffect(() => {
     drawTreemap(props.data);
   });
