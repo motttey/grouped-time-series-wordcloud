@@ -11,12 +11,74 @@ function Chart(props) {
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
 
-  svg.select("g").attr("transform",
+  svg.select("g#wordCloud")
+    .attr("transform",
         "translate(" + width/2 + "," + height/2 + ")");
 
-  createWordCloud(props.data[0].children);
+  svg.select("g#treemap")
+    .attr("transform",
+        "translate(" + 0 + "," + 0 + ")")
+    .style("width", width)
+    .style("height", height);
 
-  function createWordCloud(data) {
+  drawWordCloud(props.data.children[0].children);
+  drawTreemap(props.data);
+
+  function drawTreemap(data) {
+    const data_reduced = {
+      word: data.word,
+      children: data.children
+        .map((d) => {
+          return {
+            word: d.word,
+            size: d3.sum(d.children, function(c){
+              return Math.abs(c.size);
+            })
+          }
+        })
+    };
+
+    const root = d3.hierarchy(data_reduced);
+    root.sum(function(d) { return d.size; });
+
+    const treemap = d3.treemap()
+      .size([width, height])
+      .padding(1)
+      .round(true);
+
+    treemap(root);
+
+    const updateNode = svg.select("g#treemap")
+      .selectAll("g.node")
+      .data(root.leaves());
+
+    const enterNode = updateNode
+      .enter().append("g")
+      .attr("class", "node");
+
+    const g = enterNode.merge(updateNode)
+      .transition(1000)
+      .attr("transform", function(d) { return "translate(" + d.x0 + "," + (d.y0) + ")"; });
+
+    const updateRect = svg.select("g#treemap").selectAll("rect")
+      .data(root.leaves());
+
+    const enterRect = updateRect
+      .enter().append("rect")
+      .attr("class", "rect");
+
+    enterRect.merge(updateRect)
+      .transition(1000)
+      .attr("width", function(d) { return d.x1 - d.x0; })
+      .attr("height", function(d) { return d.y1 - d.y0; })
+      .style("fill", function(d, i) {
+        return d3.schemeCategory10[i];
+      })
+      .style("opacity", 0.6);
+  }
+
+  function drawWordCloud(data) {
+    console.log(data);
     const layout = d3_cloud()
       .size([width, height])
       .words(data.map(function (d) {
@@ -34,7 +96,7 @@ function Chart(props) {
     layout.start();
 
     function draw(words) {
-      const updateText = svg.select("g").selectAll("text")
+      const updateText = svg.select("g#word_cloud").selectAll("text")
         .data(words);
 
       const enterText = updateText
@@ -54,14 +116,16 @@ function Chart(props) {
   };
 
   useEffect(() => {
-    createWordCloud(props.data[0].children);
+    drawWordCloud(props.data.children[0].children);
+    drawTreemap(props.data);
   });
 
   return (
     <svg
       style={{ width: width, height: height }}
     >
-      <g id="wordCloud"> </g>
+      <g id="word_cloud"> </g>
+      <g id="treemap"> </g>
     </svg>
   );
 }
