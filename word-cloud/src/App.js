@@ -25,6 +25,14 @@ function App() {
           { word: "C", size: 34},
           { word: "D", size: 20}
         ]
+      },
+      {
+        word: "groupC",
+        children: [
+          { word: "A", size: 80},
+          { word: "B", size: 34},
+          { word: "C", size: 140}
+        ]
       }
     ]
   };
