@@ -90,13 +90,12 @@ function Chart(props) {
 
     const layout = d3_cloud()
       .size([treeMapWidth, treeMapHeight])
-      .words(targetData.children.map(function (d) {
+      .words(targetData.children.map((d) => {
         return {
           text: d.word,
-          size: d.size,
-          color: "gray" };
+          size: d.size
         }
-      ))
+      }))
       .padding(5)
       .rotate(0)
       .fontSize(function (d) { return d.size; })
@@ -121,8 +120,13 @@ function Chart(props) {
 
       enterText.merge(updateText)
         .transition(1000)
-        .style("font-size", function (d) { return d.size; })
-        .attr("fill", function (d) { return d.color;} )
+        .style("font-size", function (d) {
+          console.log(d.size);
+          return d3.min([d.size, 50]).toString() + "px";
+        })
+        .attr("fill", function (d) {
+          return d3.schemeCategory10[index];
+        })
         .attr("text-anchor", "middle")
         .style("font-family", "Impact")
         .attr("transform", function (d) {
