@@ -37,8 +37,7 @@ function App() {
     ]
   };
 
-  const [ dataState, setDataState ] = useState(data);
-  function getData() {
+  const getData = () => {
     return data.children.map((d) => {
       return {
         word: d.word,
@@ -50,20 +49,43 @@ function App() {
         })
       }
     });
-  }
-  const interval = useInterval(function(){
-    const newData = {
+  };
+
+  const increment = () => {
+    setIndexState(indexState + 1)
+  };
+
+  const appendData = () => {
+    dataState.push({
+      word: "All",
+      children: getData()
+    });
+
+    setDataState(dataState);
+  };
+
+  let allData = [
+    {
       word: "All",
       children: getData()
     }
-    setDataState(newData);
-  }, 2500);
+  ];
+
+  const [ dataState, setDataState ] = useState(allData);
+  const [ indexState, setIndexState ] = useState(0);
+
+  useInterval(function(){
+    // 時点が増えすぎるのをいったん抑制
+    if (indexState > 10) return;
+    appendData();
+    increment();
+  }, 3000);
 
   return (
     <div className="App">
       <div id="container">
         <h2>React D3.js line chart</h2>
-        <Chart data={dataState} />
+        <Chart data={dataState} index={indexState} />
       </div>
     </div>
   );

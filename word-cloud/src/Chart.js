@@ -21,7 +21,7 @@ function Chart(props) {
     .style("width", width)
     .style("height", height);
 
-  drawTreemap(props.data);
+  drawTreemap(props.data[props.index]);
 
   function drawTreemap(data) {
     const data_reduced = {
@@ -78,7 +78,6 @@ function Chart(props) {
       })
       .style("opacity", 0.6)
       .each((d, i) => {
-        console.log(d);
         drawWordCloudFromTreemap(data, d, i);
       });
   }
@@ -96,7 +95,7 @@ function Chart(props) {
           size: d.size
         }
       }))
-      .padding(5)
+      .padding(25)
       .rotate(0)
       .fontSize(function (d) { return d.size; })
       .on("end", draw);
@@ -121,7 +120,6 @@ function Chart(props) {
       enterText.merge(updateText)
         .transition(1000)
         .style("font-size", function (d) {
-          console.log(d.size);
           return d3.min([d.size, 50]).toString() + "px";
         })
         .attr("fill", function (d) {
@@ -137,7 +135,7 @@ function Chart(props) {
   }
 
   useEffect(() => {
-    drawTreemap(props.data);
+    drawTreemap(props.data[props.index]);
   });
 
   return (
