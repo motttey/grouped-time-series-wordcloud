@@ -101,7 +101,7 @@ function Chart(props) {
       .on("end", draw);
 
     const targetId = "g#" + treeMapData.data.word;
-    const treeMapG = svg.select("g#word_cloud").selectAll(targetId)
+    svg.select("g#word_cloud").selectAll(targetId)
       .data(treeMapData)
       .enter().append("g")
       .attr("id", treeMapData.data.word)
@@ -131,6 +131,50 @@ function Chart(props) {
           return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
         })
        .text(function (d) { return d.text; });
+
+       const updateLineChart =   svg.select("g#word_cloud").selectAll(targetId).selectAll("g.lineChart")
+         .data(words);
+
+       const margin = 10;
+       const enterLineChart = updateLineChart
+         .enter().append("g")
+         .attr("class", "lineChart");
+
+       enterLineChart
+         .append("path")
+         .attr("class", "timeSeries");
+
+       const merged = enterLineChart.merge(updateLineChart);
+
+       merged
+         .attr("transform", function (d) {
+           return "translate(" + [d.x + margin, d.y + margin]
+            + ")rotate(" + d.rotate + ")";
+         })
+         .each((_, i, node) => {
+           const timeSeries = props.data.map(
+             (v) => v.children[index].children[i]
+           );
+
+           const xScale = d3.scaleLinear()
+             .domain([0, props.data.length])
+             .range([0, 50]);
+
+           const yScale = d3.scaleLinear()
+             .domain([0, d3.max(timeSeries, function(d) { return d.size; })])
+             .range([5 * timeSeries.length, 0]);
+
+           d3.select(node[i]).select("path")
+             .datum(timeSeries)
+             .attr("fill", "none")
+             .attr("stroke", d3.schemeCategory10[index])
+             .attr("stroke-width", 1)
+             .attr("d", d3.line()
+               .x(function(_, i) { return xScale(i); })
+               .y(function(d) { return yScale(d.size); }));
+
+         });
+
     }
   }
 
