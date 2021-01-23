@@ -37,8 +37,12 @@ function App() {
       {
         word: "groupD",
         children: [
-          { word: "A", size: 67},
-          { word: "B", size: 80},
+          { word: "A2", size: 67},
+          { word: "B2", size: 80},
+          { word: "C2", size: 27},
+          { word: "D2", size: 30},
+          { word: "E2", size: 27},
+          { word: "F2", size: 30},
         ]
       }
     ]
