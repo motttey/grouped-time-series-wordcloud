@@ -56,7 +56,8 @@ function Chart(props) {
       .attr("class", "rect");
 
     enterRect.merge(updateRect)
-      .transition(1000)
+      .transition()
+      .duration(transitionMax)
       .attr("transform", function(d) {
         return "translate(" + d.x0 + "," + (d.y0) + ")";
       })
@@ -111,7 +112,8 @@ function Chart(props) {
         .enter().append("text");
 
       enterText.merge(updateText)
-        .transition(transitionMax)
+        .transition()
+        .duration(transitionMax)
         .style("font-size", function (d) {
           return d3.min([d.size, fontSizeMax]).toString() + "px";
         })
@@ -136,7 +138,8 @@ function Chart(props) {
        const merged = enterLineChart.merge(updateLineChart);
 
        merged
-         .transition(transitionMax)
+         .transition()
+         .duration(transitionMax)
          .attr("transform", function (d) {
            return "translate(" + [d.x + marginSparkLine, d.y + marginSparkLine]
             + ")rotate(" + d.rotate + ")";
@@ -180,19 +183,33 @@ function Chart(props) {
       enterCircle.merge(updateCircle)
         .transition(transitionMax)
         .attr("fill", (_, i) =>
-          (i === timeSeries.length - 1)? "orange": d3.schemeCategory10[groupIndex]
+          (i === props.index)? "orange": d3.schemeCategory10[groupIndex]
         )
         .attr("r", (_, i) =>
-          (i === timeSeries.length - 1)? 2: 1
+          (i === props.index)? 3: 2
         )
         .attr("stroke", "black")
         .attr("stroke-width", (_, i) =>
-          (i === timeSeries.length - 1)? 1: 0
+          (i === props.index)? 1: 0
         )
         .attr("cx", (_, i) => xScale(i))
-        .attr("cy", (t) => yScale(t.size));
-    }
+        .attr("cy", (t) => yScale(t.size))
 
+      d3.select(node).selectAll("circle.currentNode")
+        .on("click", (event, d) => {
+          props.updateIndex(timeSeries.indexOf(d));
+        })
+        .on("mouseover", (event, d) => {
+          d3.select(event.currentTarget)
+            .attr("stroke", "red")
+            .attr("stroke-width", 2);
+        })
+        .on("mouseout", (event, d) => {
+          d3.select(event.currentTarget)
+            .attr("stroke", "black")
+            .attr("stroke-width", 1);
+        });
+    }
   }
 
   useEffect(() => {
@@ -200,9 +217,7 @@ function Chart(props) {
   });
 
   return (
-    <svg
-      style={{ width: width, height: height }}
-    >
+    <svg style={{ width: width, height: height }}>
       <g id="treemap"> </g>
     </svg>
   );

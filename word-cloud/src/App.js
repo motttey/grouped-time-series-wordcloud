@@ -62,6 +62,11 @@ function App() {
     });
   };
 
+  const updateIndexFromChild = (index) => {
+    setIndexState(index);
+    setDataState(dataState);
+  };
+
   const increment = () => {
     setIndexState(indexState + 1)
   };
@@ -87,7 +92,7 @@ function App() {
 
   useInterval(function(){
     // 時点が増えすぎるのをいったん抑制
-    if (indexState > 10) return;
+    if (dataState.length > 10) return;
     appendData();
     increment();
   }, 3000);
@@ -96,7 +101,11 @@ function App() {
     <div className="App">
       <div id="container">
         <h2>React D3.js line chart</h2>
-        <Chart data={dataState} index={indexState} />
+        <Chart
+          data={dataState}
+          index={indexState}
+          updateIndex={updateIndexFromChild}
+        />
       </div>
     </div>
   );
