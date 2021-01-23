@@ -144,6 +144,14 @@ function Chart(props) {
          .append("path")
          .attr("class", "timeSeries");
 
+       enterLineChart
+         .append("circle")
+         .attr("class", "currentNode")
+         .attr("fill", "orange")
+         .attr("r", 2)
+         .attr("stroke", "black")
+         .attr("stroke-width", 1);
+
        const merged = enterLineChart.merge(updateLineChart);
 
        merged
@@ -151,7 +159,7 @@ function Chart(props) {
            return "translate(" + [d.x + margin, d.y + margin]
             + ")rotate(" + d.rotate + ")";
          })
-         .each((_, i, node) => {
+         .each((d, i, node) => {
            const timeSeries = props.data.map(
              (v) => v.children[index].children[i]
            );
@@ -170,9 +178,17 @@ function Chart(props) {
              .attr("stroke", d3.schemeCategory10[index])
              .attr("stroke-width", 1)
              .attr("d", d3.line()
-               .x(function(_, i) { return xScale(i); })
-               .y(function(d) { return yScale(d.size); }));
+               .x(function(_, i) {
+                 return xScale(i);
+               })
+               .y(function(d) {
+                 return yScale(d.size);
+               })
+             );
 
+           d3.select(node[i]).select("circle")
+            .attr("cx", xScale(timeSeries.length - 1))
+            .attr("cy", yScale(timeSeries[timeSeries.length - 1].size));
          });
 
     }
