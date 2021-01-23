@@ -81,8 +81,8 @@ function Chart(props) {
       });
   }
 
-  function drawWordCloudFromTreemap(data, treeMapData, index) {
-    const targetData = data.children[index];
+  function drawWordCloudFromTreemap(data, treeMapData, groupIndex) {
+    const targetData = data.children[groupIndex];
     const treeMapWidth = treeMapData.x1 - treeMapData.x0;
     const treeMapHeight = treeMapData.y1 - treeMapData.y0;
 
@@ -121,7 +121,7 @@ function Chart(props) {
         .style("font-size", function (d) {
           return d3.min([d.size, 50]).toString() + "px";
         })
-        .attr("fill", (d) => d3.schemeCategory10[index])
+        .attr("fill", (d) => d3.schemeCategory10[groupIndex])
         .attr("text-anchor", "middle")
         .style("font-family", "Impact")
         .attr("transform", function (d) {
@@ -148,52 +148,56 @@ function Chart(props) {
          })
          .each((d, i, node) => {
            const timeSeries = props.data.map(
-             (v) => v.children[index].children[i]
+             (v) => v.children[groupIndex].children[i]
            );
-
-           const xScale = d3.scaleLinear()
-             .domain([0, timeSeries.length])
-             .range([0, 50]);
-
-           const yScale = d3.scaleLinear()
-             .domain([0, d3.max(timeSeries, (d) => d.size)])
-             .range([5 * timeSeries.length, 0]);
-
-           d3.select(node[i]).select("path")
-             .datum(timeSeries)
-             .attr("fill", "none")
-             .attr("stroke", d3.schemeCategory10[index])
-             .attr("stroke-width", 1)
-             .attr("d", d3.line()
-               .x((_, i) => xScale(i))
-               .y((d) => yScale(d.size))
-             );
-
-
-           const updateCircle = d3.select(node[i])
-             .selectAll("circle.currentNode")
-             .data(timeSeries);
-
-           const enterCircle = updateCircle
-             .enter().append("circle")
-             .attr("class", "currentNode");
-
-           enterCircle.merge(updateCircle)
-               .attr("fill", (_, i) =>
-                 (i === timeSeries.length - 1)? "orange": d3.schemeCategory10[index]
-               )
-               .attr("r", (_, i) =>
-                 (i === timeSeries.length - 1)? 2: 1
-               )
-               .attr("stroke", "black")
-               .attr("stroke-width", (_, i) =>
-                 (i === timeSeries.length - 1)? 1: 0
-               )
-               .attr("cx", (_, i) => xScale(i))
-               .attr("cy", (t) => yScale(t.size));
+           drawCircles(node[i], timeSeries, groupIndex);
          });
 
     }
+
+    function drawCircles(node, timeSeries, groupIndex) {
+      const xScale = d3.scaleLinear()
+        .domain([0, timeSeries.length])
+        .range([0, 50]);
+
+      const yScale = d3.scaleLinear()
+        .domain([0, d3.max(timeSeries, (t) => t.size)])
+        .range([5 * timeSeries.length, 0]);
+
+      d3.select(node).select("path")
+        .datum(timeSeries)
+        .attr("fill", "none")
+        .attr("stroke", d3.schemeCategory10[groupIndex])
+        .attr("stroke-width", 1)
+        .attr("d", d3.line()
+          .x((_, i) => xScale(i))
+          .y((t) => yScale(t.size))
+        );
+
+
+      const updateCircle = d3.select(node)
+        .selectAll("circle.currentNode")
+        .data(timeSeries);
+
+      const enterCircle = updateCircle
+        .enter().append("circle")
+        .attr("class", "currentNode");
+
+      enterCircle.merge(updateCircle)
+          .attr("fill", (_, i) =>
+            (i === timeSeries.length - 1)? "orange": d3.schemeCategory10[groupIndex]
+          )
+          .attr("r", (_, i) =>
+            (i === timeSeries.length - 1)? 2: 1
+          )
+          .attr("stroke", "black")
+          .attr("stroke-width", (_, i) =>
+            (i === timeSeries.length - 1)? 1: 0
+          )
+          .attr("cx", (_, i) => xScale(i))
+          .attr("cy", (t) => yScale(t.size));
+    }
+
   }
 
   useEffect(() => {
