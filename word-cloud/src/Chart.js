@@ -6,6 +6,7 @@ function Chart(props) {
   const width = 600;
   const height = 400;
   const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+  const marginSparkLine = 10;
 
   const svg = d3.select("svg")
     .attr("width", width + margin.left + margin.right)
@@ -130,8 +131,6 @@ function Chart(props) {
 
        const updateLineChart =   svg.select("g#word_cloud").selectAll(targetId).selectAll("g.lineChart")
          .data(words);
-
-       const margin = 10;
        const enterLineChart = updateLineChart
          .enter().append("g")
          .attr("class", "lineChart");
@@ -140,19 +139,11 @@ function Chart(props) {
          .append("path")
          .attr("class", "timeSeries");
 
-       enterLineChart
-         .append("circle")
-         .attr("class", "currentNode")
-         .attr("fill", "orange")
-         .attr("r", 2)
-         .attr("stroke", "black")
-         .attr("stroke-width", 1);
-
        const merged = enterLineChart.merge(updateLineChart);
 
        merged
          .attr("transform", function (d) {
-           return "translate(" + [d.x + margin, d.y + margin]
+           return "translate(" + [d.x + marginSparkLine, d.y + marginSparkLine]
             + ")rotate(" + d.rotate + ")";
          })
          .each((d, i, node) => {
@@ -178,9 +169,28 @@ function Chart(props) {
                .y((d) => yScale(d.size))
              );
 
-           d3.select(node[i]).select("circle")
-            .attr("cx", xScale(timeSeries.length - 1))
-            .attr("cy", yScale(timeSeries[timeSeries.length - 1].size));
+
+           const updateCircle = d3.select(node[i])
+             .selectAll("circle.currentNode")
+             .data(timeSeries);
+
+           const enterCircle = updateCircle
+             .enter().append("circle")
+             .attr("class", "currentNode");
+
+           enterCircle.merge(updateCircle)
+               .attr("fill", (_, i) =>
+                 (i === timeSeries.length - 1)? "orange": d3.schemeCategory10[index]
+               )
+               .attr("r", (_, i) =>
+                 (i === timeSeries.length - 1)? 2: 1
+               )
+               .attr("stroke", "black")
+               .attr("stroke-width", (_, i) =>
+                 (i === timeSeries.length - 1)? 1: 0
+               )
+               .attr("cx", (_, i) => xScale(i))
+               .attr("cy", (t) => yScale(t.size));
          });
 
     }
