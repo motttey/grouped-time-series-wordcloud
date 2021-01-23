@@ -30,15 +30,13 @@ function Chart(props) {
         .map((d) => {
           return {
             word: d.word,
-            size: d3.sum(d.children, function(c){
-              return Math.abs(c.size);
-            })
+            size: d3.sum(d.children, (c) => Math.abs(c.size))
           }
         })
     };
 
     const root = d3.hierarchy(data_reduced);
-    root.sum(function(d) { return d.size; });
+    root.sum((d) => d.size);
 
     const treemap = d3.treemap()
       .size([width, height])
@@ -70,12 +68,12 @@ function Chart(props) {
 
     enterRect.merge(updateRect)
       .transition(1000)
-      .attr("transform", function(d) { return "translate(" + d.x0 + "," + (d.y0) + ")"; })
-      .attr("width", function(d) { return d.x1 - d.x0; })
-      .attr("height", function(d) { return d.y1 - d.y0; })
-      .style("fill", function(d, i) {
-        return d3.schemeCategory10[i];
+      .attr("transform", function(d) {
+        return "translate(" + d.x0 + "," + (d.y0) + ")";
       })
+      .attr("width", (d) => d.x1 - d.x0)
+      .attr("height", (d) => d.y1 - d.y0)
+      .style("fill", (_, i) => d3.schemeCategory10[i])
       .style("opacity", 0.6)
       .each((d, i) => {
         drawWordCloudFromTreemap(data, d, i);
@@ -97,7 +95,7 @@ function Chart(props) {
       }))
       .padding(25)
       .rotate(0)
-      .fontSize(function (d) { return d.size; })
+      .fontSize((d) => d.size)
       .on("end", draw);
 
     const targetId = "g#" + treeMapData.data.word;
@@ -122,15 +120,13 @@ function Chart(props) {
         .style("font-size", function (d) {
           return d3.min([d.size, 50]).toString() + "px";
         })
-        .attr("fill", function (d) {
-          return d3.schemeCategory10[index];
-        })
+        .attr("fill", (d) => d3.schemeCategory10[index])
         .attr("text-anchor", "middle")
         .style("font-family", "Impact")
         .attr("transform", function (d) {
           return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
         })
-       .text(function (d) { return d.text; });
+       .text((d) => d.text);
 
        const updateLineChart =   svg.select("g#word_cloud").selectAll(targetId).selectAll("g.lineChart")
          .data(words);
@@ -165,11 +161,11 @@ function Chart(props) {
            );
 
            const xScale = d3.scaleLinear()
-             .domain([0, props.data.length])
+             .domain([0, timeSeries.length])
              .range([0, 50]);
 
            const yScale = d3.scaleLinear()
-             .domain([0, d3.max(timeSeries, function(d) { return d.size; })])
+             .domain([0, d3.max(timeSeries, (d) => d.size)])
              .range([5 * timeSeries.length, 0]);
 
            d3.select(node[i]).select("path")
@@ -178,12 +174,8 @@ function Chart(props) {
              .attr("stroke", d3.schemeCategory10[index])
              .attr("stroke-width", 1)
              .attr("d", d3.line()
-               .x(function(_, i) {
-                 return xScale(i);
-               })
-               .y(function(d) {
-                 return yScale(d.size);
-               })
+               .x((_, i) => xScale(i))
+               .y((d) => yScale(d.size))
              );
 
            d3.select(node[i]).select("circle")
