@@ -58,10 +58,7 @@ function Chart(props) {
       .style("fill", (d, i) =>  {
         return d3.schemeCategory10[parentNames.indexOf(d.parent.data.word)];
       })
-      .style("opacity", 0.6)
-      .each((d, i) => {
-        // drawWordCloudFromTreemap(data, d, i);
-      });
+      .style("opacity", 0.6);
 
     const updateText = svg.select("g#treemap").selectAll("text")
       .data(childLeaves);
@@ -100,6 +97,7 @@ function Chart(props) {
       });
   }
 
+  /*
   function drawWordCloudFromTreemap(data, treeMapData, groupIndex) {
     const targetData = data.children[groupIndex]
       .children.map((d) => {
@@ -241,6 +239,7 @@ function Chart(props) {
           .attr("stroke-width", 1);
       });
   }
+  */
 
   function drawLinechart (treeMapData, timeSeries, parentNames, parent) {
     const targetId = "g#" + parent + "-" + treeMapData.data.word;
