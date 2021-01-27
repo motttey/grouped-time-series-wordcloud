@@ -41,7 +41,7 @@ function Chart(props) {
     const childLeaves = root.leaves();
 
     const updateRect = svg.select("g#treemap").selectAll("rect")
-      .data(childLeaves);
+      .data(root);
 
     const enterRect = updateRect
       .enter().append("rect")
@@ -55,10 +55,16 @@ function Chart(props) {
       })
       .attr("width", (d) => d.x1 - d.x0)
       .attr("height", (d) => d.y1 - d.y0)
-      .style("fill", (d, i) =>  {
-        return d3.schemeCategory10[parentNames.indexOf(d.parent.data.word)];
+      .style("fill", "#333333")
+      .style("stroke", (d, i) =>  {
+        return (d.depth <= 1)
+         ? d3.schemeCategory10[parentNames.indexOf(d.data.word)]
+         : "none";
       })
-      .style("opacity", 0.6);
+      .style("stroke", "5px")
+      .style("opacity", (d) => {
+        return (d.depth <= 1)? 1 : 0;
+      })
 
     const updateText = svg.select("g#treemap").selectAll("text")
       .data(childLeaves);
