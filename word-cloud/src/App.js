@@ -81,10 +81,7 @@ function App() {
   };
 
   let allData = [
-    {
-      word: "All",
-      children: getData()
-    }
+    data
   ];
 
   const [ dataState, setDataState ] = useState(allData);

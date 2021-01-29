@@ -7,7 +7,7 @@ function Chart(props) {
   const margin = { top: 50, right: 50, bottom: 50, left: 50 };
   const marginSparkLine =  5;
   const fontSizeMax = 100;
-  const transitionMax = 1000;
+  const transitionMax = (props.index > 0)? 1000: 0;
 
   const svg = d3.select("svg")
     .attr("width", width + margin.left + margin.right)
@@ -22,8 +22,6 @@ function Chart(props) {
         "translate(" + 0 + "," + 0 + ")")
     .style("width", width)
     .style("height", height);
-
-  drawTreemap(props.data[props.index]);
 
   function drawTreemap(data) {
     const root = d3.hierarchy(data);
