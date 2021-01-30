@@ -7,6 +7,7 @@ function Chart(props) {
   const margin = { top: 50, right: 50, bottom: 50, left: 50 };
   const marginSparkLine =  5;
   const fontSizeMax = 100;
+  const strokeWidth = 4;
   const transitionMax = (props.index > 0)? 1000: 0;
 
   const svg = d3.select("svg")
@@ -50,15 +51,15 @@ function Chart(props) {
       .attr("transform", function(d) {
         return "translate(" + d.x0 + "," + (d.y0) + ")";
       })
-      .attr("width", (d) => d.x1 - d.x0)
-      .attr("height", (d) => d.y1 - d.y0)
+      .attr("width", (d) => d.x1 - d.x0 - strokeWidth/2)
+      .attr("height", (d) => d.y1 - d.y0 - strokeWidth/2)
       .style("fill", "#333333")
       .style("stroke", (d, i) =>  {
         return (d.depth <= 1)
          ? d3.schemeCategory10[parentNames.indexOf(d.data.word)]
          : "none";
       })
-      .style("stroke", "5px")
+      .style("stroke-width", (strokeWidth).toString() + "px")
       .style("opacity", (d) => {
         return (d.depth <= 1)? 1 : 0;
       })
@@ -96,7 +97,7 @@ function Chart(props) {
         .map(
           (v) => v.children.find((e) => e.word === d.data.word)
         );
-        drawLinechart(d, groupSeries, parentNames, parent);
+        if (d.data.size > fontSizeMax/2) drawLinechart(d, groupSeries, parentNames, parent);
       });
   }
 
