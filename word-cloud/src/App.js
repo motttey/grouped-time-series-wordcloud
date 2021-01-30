@@ -1,11 +1,11 @@
 import './App.css';
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Chart from './Chart'
 import useInterval from 'use-interval'
 const rand_max = 20;
 
 function App() {
-  let data = {
+  const data = {
     word: "All",
     children: [
       {
@@ -80,18 +80,25 @@ function App() {
     setDataState(dataState);
   };
 
-  let allData = [
-    data
-  ];
-
+  let allData = [];
   const [ dataState, setDataState ] = useState(allData);
   const [ indexState, setIndexState ] = useState(0);
+
+  useEffect(()=>{
+    setIndexState(0);
+    setDataState([
+      {
+        word: "All",
+        children: getData()
+      }
+    ]);
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useInterval(function(){
     // 時点が増えすぎるのをいったん抑制
     if (dataState.length > 10) return;
-    appendData();
     increment();
+    appendData();
   }, 3000);
 
   return (

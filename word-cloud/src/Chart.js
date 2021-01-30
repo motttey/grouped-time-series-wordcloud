@@ -8,7 +8,7 @@ function Chart(props) {
   const marginSparkLine =  5;
   const fontSizeMax = 100;
   const strokeWidth = 4;
-  const transitionMax = (props.index > 0)? 1000: 0;
+  const transitionMax = (props.index > 0)? 500: 0;
 
   const svg = d3.select("svg")
     .attr("width", width + margin.left + margin.right)
@@ -204,7 +204,7 @@ function Chart(props) {
   }
 
   useEffect(() => {
-    drawTreemap(props.data[props.index]);
+    if (props.data[props.index]) drawTreemap(props.data[props.index]);
   });
 
   return (
