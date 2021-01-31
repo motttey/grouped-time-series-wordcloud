@@ -6,8 +6,10 @@ function Chart(props) {
   const height = 800;
   const margin = { top: 50, right: 50, bottom: 50, left: 50 };
   const marginSparkLine =  5;
+  const fontSizeMin = 30;
   const fontSizeMax = 100;
   const strokeWidth = 4;
+  const lineChartSize = 75;
   const transitionMax = (props.index > 0)? 500: 0;
 
   const svg = d3.select("svg")
@@ -51,8 +53,8 @@ function Chart(props) {
       .attr("transform", function(d) {
         return "translate(" + d.x0 + "," + (d.y0) + ")";
       })
-      .attr("width", (d) => d.x1 - d.x0 - strokeWidth/2)
-      .attr("height", (d) => d.y1 - d.y0 - strokeWidth/2)
+      .attr("width", (d) => d.x1 - d.x0 - fontSizeMin)
+      .attr("height", (d) => d.y1 - d.y0 - fontSizeMin)
       .style("fill", "#333333")
       .style("stroke", (d, i) =>  {
         return (d.depth <= 1)
@@ -139,7 +141,7 @@ function Chart(props) {
     const groupIndex = parentNames.indexOf(parent);
     const xScale = d3.scaleLinear()
       .domain([0, timeSeries.length])
-      .range([0, 50]);
+      .range([0, lineChartSize]);
 
     const yScale = d3.scaleLinear()
       .domain([0, d3.max(timeSeries, (t) => t.size)])
@@ -169,7 +171,8 @@ function Chart(props) {
       .data(timeSeries);
 
     const enterCircle = updateCircle
-      .enter().append("circle")
+      .enter()
+      .append("circle")
       .attr("class", "currentNode");
 
     enterCircle.merge(updateCircle)
@@ -178,14 +181,12 @@ function Chart(props) {
         (i === props.index)? "orange": d3.schemeCategory10[groupIndex]
       )
       .attr("r", (_, i) =>
-        (i === props.index)? 3: 2
+        (i === props.index)? 4: 3
       )
       .attr("stroke", "black")
-      .attr("stroke-width", (_, i) =>
-        (i === props.index)? 1: 0
-      )
+      .attr("stroke-width", 1)
       .attr("cx", (_, i) => xScale(i))
-      .attr("cy", (t) => yScale(t.size))
+      .attr("cy", (t) => yScale(t.size));
 
     merged.selectAll("circle.currentNode")
       .on("click", (event, d) => {
