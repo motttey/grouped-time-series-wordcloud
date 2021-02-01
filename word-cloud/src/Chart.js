@@ -6,7 +6,7 @@ function Chart(props) {
   const height = 800;
   const margin = { top: 50, right: 50, bottom: 50, left: 50 };
   const marginSparkLine =  5;
-  const fontSizeMin = 30;
+  const fontSizeMin = 40;
   const fontSizeMax = 100;
   const strokeWidth = 4;
   const lineChartSize = 75;
@@ -53,8 +53,8 @@ function Chart(props) {
       .attr("transform", function(d) {
         return "translate(" + d.x0 + "," + (d.y0) + ")";
       })
-      .attr("width", (d) => d.x1 - d.x0 - fontSizeMin)
-      .attr("height", (d) => d.y1 - d.y0 - fontSizeMin)
+      .attr("width", (d) => d.x1 - d.x0 - strokeWidth)
+      .attr("height", (d) => d.y1 - d.y0 - strokeWidth)
       .style("fill", "#333333")
       .style("stroke", (d, i) =>  {
         return (d.depth <= 1)
@@ -99,7 +99,7 @@ function Chart(props) {
         .map(
           (v) => v.children.find((e) => e.word === d.data.word)
         );
-        if (d.data.size > fontSizeMax/2) drawLinechart(d, groupSeries, parentNames, parent);
+        if (d.data.size > fontSizeMin) drawLinechart(d, groupSeries, parentNames, parent);
       });
   }
 
