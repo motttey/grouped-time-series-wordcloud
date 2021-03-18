@@ -1,10 +1,36 @@
 import './App.css';
-import React, { useState, useEffect } from 'react'
-import Chart from './Chart'
-import useInterval from 'use-interval'
+import React, { useState, useEffect } from 'react';
+import Chart from './Chart';
+import useInterval from 'use-interval';
+import topix from './topix';
 const rand_max = 20;
 
+function getCompanyObject(company) {
+  return new Object({
+    word: company.word,
+    close: company.close,
+    size: company.close / 100,
+    code: company.code
+  });
+};
+
+function getCompany(category) {
+  return new Object({
+    word: category.word,
+    children: category.children.map((company) => getCompanyObject(company)),
+  })
+};
+
+function getCategory(timestamp) {
+  return new Object({
+    word: timestamp.word,
+    children: timestamp.children.map((category) => getCompany(category)),
+  })
+};
+
 function App() {
+  const topix2 = topix.map((d) => getCategory(d));
+
   const data = {
     word: "All",
     children: [
@@ -81,32 +107,30 @@ function App() {
   };
 
   let allData = [];
-  const [ dataState, setDataState ] = useState(allData);
+  const [ dataState, setDataState ] = useState([]);
   const [ indexState, setIndexState ] = useState(0);
 
   useEffect(()=>{
     setIndexState(0);
-    setDataState([
-      {
-        word: "All",
-        children: getData()
-      }
-    ]);
+    setDataState(topix2);
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+
+  /*
   useInterval(function(){
     // 時点が増えすぎるのをいったん抑制
     if (dataState.length > 10) return;
     increment();
     appendData();
   }, 3000);
+  */
 
   return (
     <div className="App">
       <div id="container">
         <h2>React D3.js line chart</h2>
         <Chart
-          data={dataState}
+          data={topix2}
           index={indexState}
           updateIndex={updateIndexFromChild}
         />

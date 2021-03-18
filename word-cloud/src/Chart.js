@@ -104,14 +104,14 @@ function Chart(props) {
   }
 
   function drawLinechart (treeMapData, timeSeries, parentNames, parent) {
-    const targetId = "g#" + parent + "-" + treeMapData.data.word;
+    const targetId = "g#" + parent + "-" + treeMapData.data.code;
     const treeMapWidth = treeMapData.x1 - treeMapData.x0;
     const treeMapHeight = treeMapData.y1 - treeMapData.y0;
 
     svg.select("g#treemap").selectAll(targetId)
       .data(treeMapData)
       .enter().append("g")
-      .attr("id", parent + "-" + treeMapData.data.word)
+      .attr("id", parent + "-" + treeMapData.data.code)
       .attr("width", treeMapWidth)
       .attr("height", treeMapHeight)
       .attr("transform",
@@ -124,7 +124,7 @@ function Chart(props) {
 
     const enterLineChart = updateLineChart
       .enter().append("g")
-      .attr("class", parent + "-" + treeMapData.data.word);
+      .attr("class", parent + "-" + treeMapData.data.code);
 
     const merged = enterLineChart.merge(updateLineChart);
 
