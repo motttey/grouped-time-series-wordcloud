@@ -29,7 +29,7 @@ function getCategory(timestamp) {
 };
 
 function App() {
-  const topix2 = topix.map((d) => getCategory(d));
+  const topixFormat = topix.map((d) => getCategory(d));
 
   const data = {
     word: "All",
@@ -111,8 +111,8 @@ function App() {
   const [ indexState, setIndexState ] = useState(0);
 
   useEffect(()=>{
-    setIndexState(0);
-    setDataState(topix2);
+    setIndexState(topixFormat.length - 1);
+    setDataState(topixFormat);
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
 
@@ -130,7 +130,7 @@ function App() {
       <div id="container">
         <h2>React D3.js line chart</h2>
         <Chart
-          data={topix2}
+          data={topixFormat}
           index={indexState}
           updateIndex={updateIndexFromChild}
         />

@@ -6,12 +6,13 @@ function Chart(props) {
   const height = 800;
   const margin = { top: 50, right: 50, bottom: 50, left: 50 };
   const marginSparkLine =  5;
-  const fontSizeMin = 40;
-  const fontSizeMax = 100;
+  const fontSizeMin = 16;
+  const fontSizeMax = 24;
   const strokeWidth = 4;
   const lineChartSize = 75;
   const transitionMax = (props.index > 0)? 500: 0;
 
+  const chartSegmentLength = Math.ceil(props.data.length / 10);
   const svg = d3.select("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -99,7 +100,7 @@ function Chart(props) {
         .map(
           (v) => v.children.find((e) => e.word === d.data.word)
         );
-        if (d.data.size > fontSizeMin) drawLinechart(d, groupSeries, parentNames, parent);
+        if (d.data.size > fontSizeMin/2) drawLinechart(d, groupSeries, parentNames, parent);
       });
   }
 
@@ -141,7 +142,7 @@ function Chart(props) {
     const groupIndex = parentNames.indexOf(parent);
     const xScale = d3.scaleLinear()
       .domain([0, timeSeries.length])
-      .range([0, lineChartSize]);
+      .range([0, lineChartSize - 10]);
 
     const yScale = d3.scaleLinear()
       .domain([0, d3.max(timeSeries, (t) => t.size)])
@@ -185,6 +186,9 @@ function Chart(props) {
       )
       .attr("stroke", "black")
       .attr("stroke-width", 1)
+      .attr("opacity", (_, i) =>
+        (i === props.index || i % chartSegmentLength === 0)? 1: 0
+      )
       .attr("cx", (_, i) => xScale(i))
       .attr("cy", (t) => yScale(t.size));
 
