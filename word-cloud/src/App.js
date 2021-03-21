@@ -1,36 +1,36 @@
 import './App.css';
 import React, { useState, useEffect } from 'react';
 import Chart from './Chart';
-import useInterval from 'use-interval';
+// import useInterval from 'use-interval';
 import topix from './topix';
-const rand_max = 20;
 
 function getCompanyObject(company) {
-  return new Object({
+  return {
     word: company.word,
     close: company.close,
     size: company.close / 100,
     code: company.code
-  });
+  };
 };
 
 function getCompany(category) {
-  return new Object({
+  return {
     word: category.word,
     children: category.children.map((company) => getCompanyObject(company)),
-  })
+  }
 };
 
 function getCategory(timestamp) {
-  return new Object({
+  return {
     word: timestamp.word,
     children: timestamp.children.map((category) => getCompany(category)),
-  })
+  }
 };
 
 function App() {
   const topixFormat = topix.map((d) => getCategory(d));
-
+  /*
+  const rand_max = 20;
   const data = {
     word: "All",
     children: [
@@ -88,11 +88,6 @@ function App() {
     });
   };
 
-  const updateIndexFromChild = (index) => {
-    setIndexState(index);
-    setDataState(dataState);
-  };
-
   const increment = () => {
     setIndexState(indexState + 1)
   };
@@ -105,8 +100,13 @@ function App() {
 
     setDataState(dataState);
   };
+  */
 
-  let allData = [];
+  const updateIndexFromChild = (index) => {
+    setIndexState(index);
+    setDataState(dataState);
+  };
+
   const [ dataState, setDataState ] = useState([]);
   const [ indexState, setIndexState ] = useState(0);
 
@@ -118,7 +118,7 @@ function App() {
 
   /*
   useInterval(function(){
-    // 時点が増えすぎるのをいったん抑制
+    // 時点が増えすぎるのを一旦抑制
     if (dataState.length > 10) return;
     increment();
     appendData();
