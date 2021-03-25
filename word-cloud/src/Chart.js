@@ -6,11 +6,12 @@ function Chart(props) {
   const height = 800;
   const margin = { top: 50, right: 50, bottom: 50, left: 50 };
   const marginSparkLine =  5;
-  const fontSizeMin = 16;
+  const fontSizeMin = 12;
   const fontSizeMax = 24;
   const strokeWidth = 4;
   const lineChartSize = 75;
   const transitionMax = (props.index > 0)? 500: 0;
+  const maxLabelLength = 8;
 
   const chartSegmentLength = Math.ceil(props.data.length / 10);
   const svg = d3.select("svg")
@@ -91,7 +92,10 @@ function Chart(props) {
               d.y0 + (d.y1 - d.y0) / 2 - marginSparkLine ]
           + ")rotate(" + 0 + ")";
       })
-      .text((d) => d.data.word)
+      .text((d) => {
+        return (d.data.word.length < maxLabelLength)? d.data.word
+          : d.data.word.slice(0, maxLabelLength - 1) + '...'
+      })
       .each((d, i) => {
         const parent = d.parent.data.word;
         const groupSeries = props.data.map(
