@@ -78,7 +78,7 @@ function Chart(props) {
       .transition()
       .duration(transitionMax)
       .style("font-size", function (d) {
-        return d3.min([d.data.size, fontSizeMax]).toString() + "px";
+        return d3.min([d3.max([d.data.size, fontSizeMin]), fontSizeMax]).toString() + "px";
       })
       .attr("fill", (d) => d3.schemeCategory10[
         parentNames.indexOf(d.parent.data.word)
@@ -100,7 +100,7 @@ function Chart(props) {
         .map(
           (v) => v.children.find((e) => e.word === d.data.word)
         );
-        if (d.data.size > fontSizeMin/2) drawLinechart(d, groupSeries, parentNames, parent);
+        drawLinechart(d, groupSeries, parentNames, parent);
       });
   }
 
@@ -136,7 +136,7 @@ function Chart(props) {
       .attr("height", treeMapHeight)
       .attr("transform",
           "translate("
-          + (treeMapData.x0 + treeMapWidth/2 + marginSparkLine) + ","
+          + (treeMapData.x0 + treeMapWidth/2 - lineChartSize + marginSparkLine) + ","
           + (treeMapData.y0 + treeMapHeight/2 + marginSparkLine) + ")");
 
     const groupIndex = parentNames.indexOf(parent);
@@ -145,8 +145,8 @@ function Chart(props) {
       .range([0, lineChartSize - 10]);
 
     const yScale = d3.scaleLinear()
-      .domain([0, d3.max(timeSeries, (t) => t.size)])
-      .range([5 * timeSeries.length, 0]);
+      .domain([0, d3.max(timeSeries, (t) => t.close)])
+      .range([lineChartSize, 0]);
 
     const updateLine = merged
       .selectAll("path.timeSeries")
@@ -161,10 +161,10 @@ function Chart(props) {
       .transition(transitionMax)
       .attr("fill", "none")
       .attr("stroke", d3.schemeCategory10[groupIndex])
-      .attr("stroke-width", 1)
+      .attr("stroke-width", 0.5)
       .attr("d", d3.line()
         .x((_, i) => xScale(i))
-        .y((t) => yScale(t.size))
+        .y((t) => yScale(t.close))
       );
 
     const updateCircle = merged
@@ -190,7 +190,7 @@ function Chart(props) {
         (i === props.index || i % chartSegmentLength === 0)? 1: 0
       )
       .attr("cx", (_, i) => xScale(i))
-      .attr("cy", (t) => yScale(t.size));
+      .attr("cy", (t) => yScale(t.close));
 
     merged.selectAll("circle.currentNode")
       .on("click", (event, d) => {
