@@ -4,19 +4,23 @@ import Chart from './Chart';
 // import useInterval from 'use-interval';
 import topix from './topix';
 
-function getCompanyObject(company) {
+function getCompanyObject(company, median) {
+  console.log(company.volume / median);
   return {
     word: company.word,
     close: company.close,
-    size: company.close / 100,
+    volume: company.volume,
+    total: company.total,
+    size: (company.volume / median) * 10,
     code: company.code
   };
 };
 
 function getCompany(category) {
+  const sorted = category.children.map((d) => d.volume).sort();
   return {
     word: category.word,
-    children: category.children.map((company) => getCompanyObject(company)),
+    children: category.children.map((company) => getCompanyObject(company, sorted[category.children.length - 1])),
   }
 };
 
