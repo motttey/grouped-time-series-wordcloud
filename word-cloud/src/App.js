@@ -2,10 +2,8 @@ import './App.css';
 import React, { useState, useEffect } from 'react';
 import Chart from './Chart';
 // import useInterval from 'use-interval';
-import topix from './topix';
 
 function getCompanyObject(company, median) {
-  console.log(company.volume / median);
   return {
     word: company.word,
     close: company.close,
@@ -32,7 +30,6 @@ function getCategory(timestamp) {
 };
 
 function App() {
-  const topixFormat = topix.map((d) => getCategory(d));
   /*
   const rand_max = 20;
   const data = {
@@ -114,9 +111,19 @@ function App() {
   const [ dataState, setDataState ] = useState([]);
   const [ indexState, setIndexState ] = useState(0);
 
+  const initializeData = () => {
+    fetch('https://vigorous-hamilton-7b091f.netlify.app/topix.json')
+      .then((res) => {
+        return res.json();
+      }).then((json) => {
+        const topixFormat = json.map((d) => getCategory(d));
+        setDataState(topixFormat);
+        setIndexState(topixFormat.length - 1);
+      });
+  }
+  // https://vigorous-hamilton-7b091f.netlify.app/topix.json
   useEffect(()=>{
-    setIndexState(topixFormat.length - 1);
-    setDataState(topixFormat);
+    initializeData();
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
 
@@ -134,7 +141,7 @@ function App() {
       <div id="container">
         <h2>React D3.js line chart</h2>
         <Chart
-          data={topixFormat}
+          data={dataState}
           index={indexState}
           updateIndex={updateIndexFromChild}
         />
