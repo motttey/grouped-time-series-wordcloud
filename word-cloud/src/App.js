@@ -9,7 +9,7 @@ function getCompanyObject(company, median) {
     close: company.close,
     volume: company.volume,
     total: company.total,
-    size: (company.volume / median) * 10,
+    size: Math.sqrt(company.volume / median) * 5,
     code: company.code
   };
 };
@@ -124,8 +124,7 @@ function App() {
   // https://vigorous-hamilton-7b091f.netlify.app/topix.json
   useEffect(()=>{
     initializeData();
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /*
   useInterval(function(){
