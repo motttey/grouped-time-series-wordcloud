@@ -32,48 +32,6 @@ function getCategory(timestamp) {
 function App() {
   /*
   const rand_max = 20;
-  const data = {
-    word: "All",
-    children: [
-      {
-        word: "groupA",
-        children: [
-          { word: "A", size: 45},
-          { word: "B", size: 34},
-          { word: "C", size: 34},
-          { word: "D", size: 20}
-        ]
-      },
-      {
-        word: "groupB",
-        children: [
-          { word: "A", size: 80},
-          { word: "B", size: 34},
-          { word: "C", size: 34},
-          { word: "D", size: 20}
-        ]
-      },
-      {
-        word: "groupC",
-        children: [
-          { word: "A", size: 80},
-          { word: "B", size: 34},
-          { word: "C", size: 140}
-        ]
-      },
-      {
-        word: "groupD",
-        children: [
-          { word: "A2", size: 67},
-          { word: "B2", size: 80},
-          { word: "C2", size: 27},
-          { word: "D2", size: 30},
-          { word: "E2", size: 27},
-          { word: "F2", size: 30},
-        ]
-      }
-    ]
-  };
 
   const getData = () => {
     return data.children.map((d) => {
@@ -121,7 +79,7 @@ function App() {
         setIndexState(topixFormat.length - 1);
       });
   }
-  // https://vigorous-hamilton-7b091f.netlify.app/topix.json
+
   useEffect(()=>{
     initializeData();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
