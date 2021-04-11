@@ -4,6 +4,8 @@ import * as d3 from 'd3';
 function Chart(props) {
   const width = 800;
   const height = 800;
+  const timelineHeight = 100;
+
   const margin = { top: 50, right: 50, bottom: 50, left: 50 };
   const marginSparkLine =  5;
   const fontSizeMin = 12;
@@ -14,7 +16,19 @@ function Chart(props) {
   const maxLabelLength = 8;
 
   const chartSegmentLength = Math.ceil(props.data.length / 10);
-  const svg = d3.select("svg")
+
+  const timelineSvg = d3.select("svg#timelineSvg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", timelineHeight);
+
+  timelineSvg.select("g#timeline")
+    .style("width", width)
+    .style("height", height);
+
+  const timeStampList = Object.keys(props.data);
+  drawTimeLine(timeStampList);
+
+  const svg = d3.select("svg#treemapSvg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
 
@@ -27,6 +41,63 @@ function Chart(props) {
         "translate(" + 0 + "," + 0 + ")")
     .style("width", width)
     .style("height", height);
+
+  function drawTimeLine(timeStampList) {
+    const xScale = d3.scaleLinear()
+      .domain([0, timeStampList.length])
+      .range([margin.right, width - margin.left]);
+    const nodeRadius = 10;
+
+    // ノードを作成
+    timelineSvg
+      .select("g#timeline")
+      .selectAll("circle")
+      .data(timeStampList)
+      .enter()
+      .append("circle")
+      .attr("class", "timelineNode")
+      .attr("fill", "white")
+      .attr("r", nodeRadius)
+      .attr("stroke", "black")
+      .attr("stroke-width", 1)
+      .attr("cx", (_, i) => xScale(i))
+      .attr("cy", timelineHeight/2)
+      .on("click", (event, d) => {
+        props.updateIndex(timeStampList.indexOf(d));
+      });
+
+    // ラベルを追加
+    timelineSvg
+      .select("g#timeline")
+      .selectAll("text")
+      .data(timeStampList)
+      .enter()
+      .append("text")
+      .style("font-size", "10px")
+      .attr("fill", "white")
+      .attr("text-anchor", "middle")
+      .style("font-family", "Impact")
+      .attr("transform", (d, i) => {
+        return "translate("
+          + [ xScale(i), timelineHeight/2 - nodeRadius * 2 ]
+          + ")rotate(" + 0 + ")";
+      })
+      .text((d) => {
+        return props.data[d]["word"]
+          .split("T")[0]
+          .split("-").slice(1).join("/");
+      });
+
+    timelineSvg
+      .select("g#timeline")
+      .append("line")
+      .attr("stroke", "white")
+      .attr("stroke-width", "2px")
+      .attr("x1", xScale(timeStampList[0]))
+      .attr("y1", timelineHeight/2)
+      .attr("x2", xScale(timeStampList[timeStampList.length - 1]))
+      .attr("y2", timelineHeight/2);
+  }
 
   function drawTreemap(data) {
     const root = d3.hierarchy(data);
@@ -213,13 +284,28 @@ function Chart(props) {
   }
 
   useEffect(() => {
-    if (props.data[props.index]) drawTreemap(props.data[props.index]);
+    if (props.data[props.index]) {
+      drawTreemap(props.data[props.index]);
+      // タイムラインの色を更新する
+      timelineSvg
+        .select("g#timeline")
+        .selectAll("circle")
+        .attr("stroke", (d) => {
+          return (timeStampList.indexOf(d) === props.index)?
+            "red" : "white";
+        });
+    }
   });
 
   return (
-    <svg style={{ width: width, height: height }}>
-      <g id="treemap"> </g>
-    </svg>
+    <div>
+      <svg id="timelineSvg" style={{ width: width, height: timelineHeight }}>
+        <g id="timeline"> </g>
+      </svg>
+      <svg id="treemapSvg" style={{ width: width, height: height }}>
+        <g id="treemap"> </g>
+      </svg>
+    </div>
   );
 }
 export default Chart;
