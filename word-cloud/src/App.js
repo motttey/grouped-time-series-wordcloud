@@ -9,7 +9,7 @@ function getCompanyObject(company, median) {
     close: company.close,
     volume: company.volume,
     total: company.total,
-    size: Math.sqrt(company.volume / median) * 5,
+    size: Math.sqrt(company.volume / median) * 10,
     code: company.code
   };
 };

@@ -15,7 +15,7 @@ function Chart(props) {
   const transitionMax = (props.index > 0)? 500: 0;
   const maxLabelLength = 8;
 
-  const chartSegmentLength = Math.ceil(props.data.length / 10);
+  const chartSegmentLength = Math.ceil(props.data.length / 5);
 
   const timelineSvg = d3.select("svg#timelineSvg")
     .attr("width", width + margin.left + margin.right)
@@ -46,6 +46,7 @@ function Chart(props) {
     const xScale = d3.scaleLinear()
       .domain([0, timeStampList.length])
       .range([margin.right, width - margin.left]);
+
     const nodeRadius = 10;
 
     // ノードを作成
@@ -211,7 +212,7 @@ function Chart(props) {
       .attr("height", treeMapHeight)
       .attr("transform",
           "translate("
-          + (treeMapData.x0 + treeMapWidth/2 - lineChartSize + marginSparkLine) + ","
+          + (treeMapData.x0 + treeMapWidth/2 - lineChartSize/2 + marginSparkLine) + ","
           + (treeMapData.y0 + treeMapHeight/2 + marginSparkLine) + ")");
 
     const groupIndex = parentNames.indexOf(parent);
@@ -262,7 +263,10 @@ function Chart(props) {
       .attr("stroke", "black")
       .attr("stroke-width", 1)
       .attr("opacity", (_, i) =>
-        (i === props.index || i % chartSegmentLength === 0)? 1: 0
+        (i === props.index
+          || i === timeSeries.length - 1
+          || i % chartSegmentLength === 0
+        )? 1: 0
       )
       .attr("cx", (_, i) => xScale(i))
       .attr("cy", (t) => yScale(t.close));
