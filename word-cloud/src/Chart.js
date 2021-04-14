@@ -40,7 +40,7 @@ function Chart(props) {
     .attr("transform",
         "translate(" + 0 + "," + 0 + ")")
     .style("width", width)
-    .style("height", height);
+    .style("height", height + margin.bottom);
 
   function drawTimeLine(timeStampList) {
     const xScale = d3.scaleLinear()
@@ -167,15 +167,18 @@ function Chart(props) {
       .text((d) => {
         return (d.data.word.length < maxLabelLength)? d.data.word
           : d.data.word.slice(0, maxLabelLength - 1) + '...'
-      })
-      .each((d, i) => {
+      });
+
+    childLeaves
+      .forEach((d, i) => {
         const parent = d.parent.data.word;
-        const groupSeries = props.data.map(
-          (v) => v.children[parentNames.indexOf(parent)]
-        )
-        .map(
-          (v) => v.children.find((e) => e.word === d.data.word)
-        );
+        const groupSeries = props.data
+          .map(
+            (v) => v.children[parentNames.indexOf(parent)]
+          )
+          .map(
+            (v) => v.children.find((e) => e.word === d.data.word)
+          );
         drawLinechart(d, groupSeries, parentNames, parent);
       });
   }
@@ -204,7 +207,6 @@ function Chart(props) {
       .attr("class", parent + "-" + treeMapData.data.code);
 
     const merged = enterLineChart.merge(updateLineChart);
-
     merged
       .transition()
       .duration(transitionMax)
@@ -285,6 +287,31 @@ function Chart(props) {
           .attr("stroke", "black")
           .attr("stroke-width", 1);
       });
+
+    const updateCurrentCloseText = merged
+      .selectAll("text.currentCloseText")
+      .data([timeSeries[props.index]]);
+
+    const enterCurrentCloseText = updateCurrentCloseText
+      .enter()
+      .append("text")
+      .attr("class", "currentCloseText");
+
+    enterCurrentCloseText.merge(updateCurrentCloseText)
+      .transition(transitionMax)
+      .style("font-size", "10px")
+      .attr("fill", "yellow")
+      .attr("text-anchor", "middle")
+      .attr("transform", function (d) {
+        console.log(xScale(props.index));
+        console.log(d.x0);
+
+        return "translate("
+          + [ xScale(props.index),
+              fontSizeMax ]
+          + ")rotate(" + 0 + ")";
+      })
+      .text((d) => d.close);
   }
 
   useEffect(() => {
