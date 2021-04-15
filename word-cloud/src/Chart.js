@@ -330,12 +330,16 @@ function Chart(props) {
 
   return (
     <div>
-      <svg id="timelineSvg" style={{ width: width, height: timelineHeight }}>
-        <g id="timeline"> </g>
-      </svg>
-      <svg id="treemapSvg" style={{ width: width, height: height }}>
-        <g id="treemap"> </g>
-      </svg>
+      <div id="timeline_container">
+        <svg id="timelineSvg" style={{ width: width, height: timelineHeight }}>
+          <g id="timeline"> </g>
+        </svg>
+      </div>
+      <div id="treemap_container">
+        <svg id="treemapSvg" style={{ width: width, height: height }}>
+          <g id="treemap"> </g>
+        </svg>
+      </div>
     </div>
   );
 }
