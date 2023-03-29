@@ -10,7 +10,7 @@ function Chart(props) {
   const marginSparkLine =  5;
   const fontSizeMin = 12;
   const fontSizeMax = 24;
-  const strokeWidth = 4;
+  const strokeWidth = 1;
   const lineChartSize = 75;
   const transitionMax = (props.index > 0)? 500: 0;
   const maxLabelLength = 8;
@@ -74,15 +74,15 @@ function Chart(props) {
       .data(timeStampList)
       .enter()
       .append("text")
-      .style("font-size", "10px")
       .attr("fill", "white")
       .attr("text-anchor", "middle")
-      .style("font-family", "Impact")
       .attr("transform", (d, i) => {
         return "translate("
           + [ xScale(i), timelineHeight/2 - nodeRadius * 2 ]
           + ")rotate(" + 0 + ")";
       })
+      .style("font-size", "10px")
+      .style("font-family", "Impact")
       .text((d) => {
         return props.data[d]["word"]
           .split("T")[0]
@@ -129,7 +129,6 @@ function Chart(props) {
       })
       .attr("width", (d) => d.x1 - d.x0 - strokeWidth)
       .attr("height", (d) => d.y1 - d.y0 - strokeWidth)
-      .style("fill", "#333333")
       .style("stroke", (d, i) =>  {
         return (d.depth <= 1)
          ? d3.schemeCategory10[parentNames.indexOf(d.data.word)]
@@ -197,7 +196,8 @@ function Chart(props) {
       .attr("transform",
           "translate("
           + (treeMapData.x0 + treeMapWidth/2) + ","
-          + (treeMapData.y0 + treeMapHeight/2) + ")");
+          + (treeMapData.y0 + treeMapHeight/2) + ")"
+      );
 
     const updateLineChart = svg.select("g#treemap").selectAll(targetId)
       .data(treeMapData);
