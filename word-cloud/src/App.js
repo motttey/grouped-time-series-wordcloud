@@ -30,47 +30,18 @@ function getCategory(timestamp) {
 };
 
 function App() {
-  /*
-  const rand_max = 20;
-
-  const getData = () => {
-    return data.children.map((d) => {
-      return {
-        word: d.word,
-        children: d.children.map((c) => {
-          return {
-            word: c.word,
-            size: c.size + parseInt(Math.random() * rand_max) - rand_max/2
-          }
-        })
-      }
-    });
-  };
-
-  const increment = () => {
-    setIndexState(indexState + 1)
-  };
-
-  const appendData = () => {
-    dataState.push({
-      word: "All",
-      children: getData()
-    });
-
-    setDataState(dataState);
-  };
-  */
-
   const updateIndexFromChild = (index) => {
     setIndexState(index);
     setDataState(dataState);
   };
 
+  const fetchApiEndpoint = 'https://vigorous-hamilton-7b091f.netlify.app/topix.json'
+
   const [ dataState, setDataState ] = useState([]);
   const [ indexState, setIndexState ] = useState(0);
 
   const initializeData = () => {
-    fetch('https://vigorous-hamilton-7b091f.netlify.app/topix.json')
+    fetch(fetchApiEndpoint)
       .then((res) => {
         return res.json();
       }).then((json) => {
@@ -83,15 +54,6 @@ function App() {
   useEffect(()=>{
     initializeData();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  /*
-  useInterval(function(){
-    // 時点が増えすぎるのを一旦抑制
-    if (dataState.length > 10) return;
-    increment();
-    appendData();
-  }, 3000);
-  */
 
   return (
     <div className="App">
