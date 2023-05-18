@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useMemo, useEffect, useState } from 'react'
 import * as d3 from 'd3';
 
 function Chart(props) {
@@ -25,9 +25,6 @@ function Chart(props) {
     .style("width", width)
     .style("height", height);
 
-  const timeStampList = Object.keys(props.data);
-  drawTimeLine(timeStampList);
-
   const svg = d3.select("svg#treemapSvg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -42,6 +39,19 @@ function Chart(props) {
     .style("width", width)
     .style("height", height + margin.bottom);
 
+  const [data, setData] = useState([]);
+  const [index, setIndex] = useState([]);
+  useMemo(() => {
+    const _data = props?.data || [];
+    setData(_data)
+  }, [props.data])
+
+  useMemo(() => {
+    const _index = props?.index || 0;
+    setIndex(_index)
+  }, [props.index])
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   function drawTimeLine(timeStampList) {
     const xScale = d3.scaleLinear()
       .domain([0, timeStampList.length])
@@ -63,7 +73,7 @@ function Chart(props) {
       .attr("stroke-width", 1)
       .attr("cx", (_, i) => xScale(i))
       .attr("cy", timelineHeight/2)
-      .on("click", (event, d) => {
+      .on("click", (_event, d) => {
         props.updateIndex(timeStampList.indexOf(d));
       });
 
@@ -100,6 +110,7 @@ function Chart(props) {
       .attr("y2", timelineHeight/2);
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   function drawTreemap(data) {
     const root = d3.hierarchy(data);
     root.sum((d) => d.size);
@@ -315,18 +326,20 @@ function Chart(props) {
   }
 
   useEffect(() => {
-    if (props.data[props.index]) {
-      drawTreemap(props.data[props.index]);
+    if (data.length > index && data[index]) {
+      const timeStampList = Object.keys(data);
+      drawTimeLine(timeStampList);
+      drawTreemap(data[index]);
       // タイムラインの色を更新する
       timelineSvg
         .select("g#timeline")
         .selectAll("circle")
         .attr("stroke", (d) => {
-          return (timeStampList.indexOf(d) === props.index)?
+          return (timeStampList.indexOf(d) === index)?
             "red" : "white";
         });
     }
-  });
+  }, [data, drawTimeLine, drawTreemap, index, timelineSvg]);
 
   return (
     <div>
