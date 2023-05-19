@@ -1,7 +1,6 @@
 import './App.css';
 import React, { useState, useEffect } from 'react';
 import Chart from './Chart';
-// import useInterval from 'use-interval';
 
 function getCompanyObject(company, median) {
   return {
