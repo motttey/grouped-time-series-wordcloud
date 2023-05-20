@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react'
+import React, { useCallback, useMemo, useEffect, useState } from 'react'
 import * as d3 from 'd3';
 
 const width = 800;
@@ -13,8 +13,6 @@ const timelineHeight = 100;
 const maxLabelLength = 8;
 
 function Chart(props) {
-  const chartSegmentLength = Math.ceil(props.data.length / 5);
-
   const timelineSvg = d3.select("svg#timelineSvg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", timelineHeight);
@@ -49,7 +47,33 @@ function Chart(props) {
     setIndex(_index)
   }, [props.index])
 
-  function drawTimeLine(data, timeStampList, updateIndex) {
+  // タイムラインの描画
+  const [timeStampList, setTimeStampList] = useState([])
+  useEffect(() => {
+    setTimeStampList(Object.keys(data));
+  }, [data]);
+
+  const [transitionMax, setTransitionMax] = useState(0)
+  useEffect(() => {
+    if (index > 0) {
+      setTransitionMax(500)
+    } else {
+      setTransitionMax(0)
+    }
+  }, [index]);
+  
+  const [specificTimeData, setSpecificTimeData] = useState({})
+  useEffect(() => {
+    if (data.length > index && data[index]) {
+      setSpecificTimeData(data[index]);
+    }
+  }, [data, index]);
+
+  const updateIndex = useCallback((index) => {
+    props.updateIndex(index)
+  },[props])
+
+  const drawTimeLine = useCallback((data, timeStampList) => {
     const xScale = d3.scaleLinear()
       .domain([0, timeStampList.length])
       .range([margin.right, width - margin.left]);
@@ -106,99 +130,15 @@ function Chart(props) {
       .attr("y1", timelineHeight/2)
       .attr("x2", xScale(timeStampList[timeStampList.length - 1]))
       .attr("y2", timelineHeight/2);
-  }
+  }, [updateIndex])
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  function drawTreemap(data, specificTimeData, transitionMax) {
-    if (!specificTimeData) return;
-    if (!data) return;
-
-    const strokeWidth = 1;
-
-    const root = d3.hierarchy(specificTimeData);
-    root.sum((d) => d.size);
-
-    const treemap = d3.treemap()
-      .size([width, height])
-      .padding(1)
-      .round(true);
-
-    treemap(root);
-
-    const parentNames = specificTimeData.children?.map((d) => d.word) || [];
-    const childLeaves = root.leaves();
-
-    const svg = d3.select("svg#treemapSvg");
-    const updateRect = svg.select("g#treemap").selectAll("rect")
-      .data(root);
-
-    const enterRect = updateRect
-      .enter().append("rect")
-      .attr("class", "rect");
-
-    enterRect.merge(updateRect)
-      .transition()
-      .duration(transitionMax)
-      .attr("transform", (d) => {
-        return "translate(" + d.x0 + "," + (d.y0) + ")";
-      })
-      .attr("width", (d) => d.x1 - d.x0 - strokeWidth)
-      .attr("height", (d) => d.y1 - d.y0 - strokeWidth)
-      .style("stroke", (d, i) =>  {
-        return (d.depth <= 1)
-         ? d3.schemeCategory10[parentNames.indexOf(d.data.word)]
-         : "none";
-      })
-      .style("stroke-width", (strokeWidth).toString() + "px")
-      .style("opacity", (d) => {
-        return (d.depth <= 1)? 1 : 0;
-      });
-
-    if (!childLeaves) return;
-    const updateText = svg.select("g#treemap").selectAll("text")
-      .data(childLeaves);
-
-    const enterText = updateText
-      .enter().append("text")
-      .attr("class", "text");
-    
-    enterText.merge(updateText)
-      .transition()
-      .duration(transitionMax)
-      .style("font-size", function (d) {
-        return d3.min([d3.max([d.data.size, fontSizeMin]), fontSizeMax]).toString() + "px";
-      })
-      .attr("fill", (d) => d3.schemeCategory10[
-        parentNames.indexOf(d?.parent?.data?.word)
-      ])
-      .attr("text-anchor", "middle")
-      .style("font-family", "Impact")
-      .attr("transform", function (d) {
-        return "translate("
-          + [ d.x0 + (d.x1 - d.x0) / 2 - marginSparkLine,
-              d.y0 + (d.y1 - d.y0) / 2 - marginSparkLine ]
-          + ")rotate(" + 0 + ")";
-      })
-      .text((d) => {
-        return (d?.data?.word?.length < maxLabelLength)? d.data.word
-          : d?.data?.word?.slice(0, maxLabelLength - 1) + '...'
-      });
-    
-    childLeaves
-      .forEach((d, _) => {
-        const parent = d?.parent?.data?.word;
-        const groupSeries = data
-          .map(
-            (v) => v?.children[parentNames.indexOf(parent)]
-          )
-          .map(
-            (v) => v?.children.find((e) => e.word === d.data.word)
-          );
-        drawLinechart(d, groupSeries, parentNames, parent);
-      });
-  }
-
-  function drawLinechart (treeMapData, timeSeries, parentNames, parent) {
+  const drawLinechart = useCallback((
+    treeMapData,
+    timeSeries,
+    parentNames,
+    parent,
+    chartSegmentLength
+  ) => {
     if (!treeMapData || treeMapData.length === 0) return;
     if (!timeSeries || timeSeries.length === 0) return;
     if (!parentNames) return;
@@ -208,7 +148,7 @@ function Chart(props) {
     const treeMapWidth = treeMapData.x1 - treeMapData.x0;
     const treeMapHeight = treeMapData.y1 - treeMapData.y0;
 
-    svg.select("g#treemap").selectAll(targetId)
+    d3.select("svg#treemapSvg").select("g#treemap").selectAll(targetId)
       .data(treeMapData)
       .enter().append("g")
       .attr("id", parent + "-" + treeMapData.data.code)
@@ -220,7 +160,7 @@ function Chart(props) {
           + (treeMapData.y0 + treeMapHeight/2) + ")"
       );
 
-    const updateLineChart = svg.select("g#treemap").selectAll(targetId)
+    const updateLineChart = d3.select("svg#treemapSvg").select("g#treemap").selectAll(targetId)
       .data(treeMapData);
 
     const enterLineChart = updateLineChart
@@ -278,15 +218,15 @@ function Chart(props) {
     enterCircle.merge(updateCircle)
       .transition(transitionMax)
       .attr("fill", (_, i) =>
-        (i === props.index)? "orange": d3.schemeCategory10[groupIndex]
+        (i === index)? "orange": d3.schemeCategory10[groupIndex]
       )
       .attr("r", (_, i) =>
-        (i === props.index)? 4: 3
+        (i === index)? 4: 3
       )
       .attr("stroke", "black")
       .attr("stroke-width", 1)
       .attr("opacity", (_, i) =>
-        (i === props.index
+        (i === index
           || i === timeSeries.length - 1
           || i % chartSegmentLength === 0
         )? 1: 0
@@ -296,14 +236,14 @@ function Chart(props) {
 
     merged.selectAll("circle.currentNode")
       .on("click", (_, d) => {
-        props.updateIndex(timeSeries.indexOf(d));
+        updateIndex(timeSeries.indexOf(d));
       })
-      .on("mouseover", (event, d) => {
+      .on("mouseover", (event) => {
         d3.select(event.currentTarget)
           .attr("stroke", "red")
           .attr("stroke-width", 2);
       })
-      .on("mouseout", (event, d) => {
+      .on("mouseout", (event) => {
         d3.select(event.currentTarget)
           .attr("stroke", "black")
           .attr("stroke-width", 1);
@@ -311,7 +251,7 @@ function Chart(props) {
 
     const updateCurrentCloseText = merged
       .selectAll("text.currentCloseText")
-      .data([timeSeries[props.index]]);
+      .data([timeSeries[index]]);
 
     const enterCurrentCloseText = updateCurrentCloseText
       .enter()
@@ -323,46 +263,112 @@ function Chart(props) {
       .style("font-size", "10px")
       .attr("fill", "yellow")
       .attr("text-anchor", "middle")
-      .attr("transform", (d) => {
+      .attr("transform", () => {
         return "translate("
           + [ xScale(index),
               fontSizeMax ]
           + ")rotate(" + 0 + ")";
       })
       .text((d) => d?.close);
-  }
+  },[transitionMax, index, updateIndex])
 
-  // タイムラインの描画
-  const [timeStampList, setTimeStampList] = useState([])
+  const drawTreemap = useCallback((data, specificTimeData, transitionMax) => {
+    if (!specificTimeData) return;
+    if (!data) return;
+
+    const strokeWidth = 1;
+    const chartSegmentLength = Math.ceil(data.length / 5);
+
+    const root = d3.hierarchy(specificTimeData);
+    root.sum((d) => d.size);
+
+    const treemap = d3.treemap()
+      .size([width, height])
+      .padding(1)
+      .round(true);
+
+    treemap(root);
+
+    const parentNames = specificTimeData.children?.map((d) => d.word) || [];
+    const childLeaves = root.leaves();
+
+    const svg = d3.select("svg#treemapSvg");
+    const updateRect = svg.select("g#treemap").selectAll("rect")
+      .data(root);
+
+    const enterRect = updateRect
+      .enter().append("rect")
+      .attr("class", "rect");
+
+    enterRect.merge(updateRect)
+      .transition()
+      .duration(transitionMax)
+      .attr("transform", (d) => {
+        return "translate(" + d.x0 + "," + (d.y0) + ")";
+      })
+      .attr("width", (d) => d.x1 - d.x0 - strokeWidth)
+      .attr("height", (d) => d.y1 - d.y0 - strokeWidth)
+      .style("stroke", (d) =>  {
+        return (d.depth <= 1)
+         ? d3.schemeCategory10[parentNames.indexOf(d.data.word)]
+         : "none";
+      })
+      .style("stroke-width", (strokeWidth).toString() + "px")
+      .style("opacity", (d) => {
+        return (d.depth <= 1)? 1 : 0;
+      });
+
+    if (!childLeaves) return;
+    const updateText = svg.select("g#treemap").selectAll("text")
+      .data(childLeaves);
+
+    const enterText = updateText
+      .enter().append("text")
+      .attr("class", "text");
+    
+    enterText.merge(updateText)
+      .transition()
+      .duration(transitionMax)
+      .style("font-size", function (d) {
+        return d3.min([d3.max([d.data.size, fontSizeMin]), fontSizeMax]).toString() + "px";
+      })
+      .attr("fill", (d) => d3.schemeCategory10[
+        parentNames.indexOf(d?.parent?.data?.word)
+      ])
+      .attr("text-anchor", "middle")
+      .style("font-family", "Impact")
+      .attr("transform", function (d) {
+        return "translate("
+          + [ d.x0 + (d.x1 - d.x0) / 2 - marginSparkLine,
+              d.y0 + (d.y1 - d.y0) / 2 - marginSparkLine ]
+          + ")rotate(" + 0 + ")";
+      })
+      .text((d) => {
+        return (d?.data?.word?.length < maxLabelLength)? d.data.word
+          : d?.data?.word?.slice(0, maxLabelLength - 1) + '...'
+      });
+    
+    childLeaves
+      .forEach((d, _) => {
+        const parent = d?.parent?.data?.word;
+        const groupSeries = data
+          .map(
+            (v) => v?.children[parentNames.indexOf(parent)]
+          )
+          .map(
+            (v) => v?.children.find((e) => e.word === d.data.word)
+          );
+        drawLinechart(d, groupSeries, parentNames, parent, chartSegmentLength);
+      });
+  }, [drawLinechart]); // 依存関係にdrawLineChartを追加
+
   useEffect(() => {
-    setTimeStampList(Object.keys(data));
-  }, [data]);
-
-
-  const [transitionMax, setTransitionMax] = useState(0)
-  useEffect(() => {
-    if (index > 0) {
-      setTransitionMax(500)
-    } else {
-      setTransitionMax(0)
-    }
-  }, [index]);
-
-  const [specificTimeData, setSpecificTimeData] = useState({})
-  useEffect(() => {
-    if (data.length > index && data[index]) {
-      setSpecificTimeData(data[index]);
-    }
-  }, [data, index]);
-
-  useEffect(() => {
-    drawTimeLine(data, timeStampList, props.updateIndex);
-  }, [data, timeStampList, props.updateIndex]);
+    drawTimeLine(data, timeStampList);
+  }, [data, timeStampList, drawTimeLine]);
 
   useEffect(() => {
     drawTreemap(data, specificTimeData, transitionMax);
-  }, [data, drawTreemap, specificTimeData, transitionMax]);
-
+  }, [data, specificTimeData, transitionMax, drawTreemap]);
 
   useEffect(() => {
     const timeStampList = Object.keys(data);
@@ -374,9 +380,6 @@ function Chart(props) {
         "red" : "white";
     });
   }, [data, index, timelineSvg]);
-
-  // const [treemapData, setTreemapData] = useState([]})
-  // const [lineChartTimeSeries, setLineChartTimeSeries] = useState([])
 
   return (
     <div>
