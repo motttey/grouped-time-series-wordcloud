@@ -52,7 +52,7 @@ function App() {
 
   useEffect(()=>{
     initializeData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="App">

@@ -56,9 +56,9 @@ function Chart(props) {
   const [transitionMax, setTransitionMax] = useState(0)
   useEffect(() => {
     if (index > 0) {
-      setTransitionMax(500)
-    } else {
       setTransitionMax(0)
+    } else {
+      setTransitionMax(500)
     }
   }, [index]);
   
