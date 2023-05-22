@@ -2,7 +2,7 @@ import './App.css';
 import React, { useState, useEffect } from 'react';
 import Chart from './Chart';
 
-function getCompanyObject(company, median) {
+const getCompanyObject = (company, median) => {
   return {
     word: company.word,
     close: company.close,
@@ -13,7 +13,7 @@ function getCompanyObject(company, median) {
   };
 };
 
-function getCompany(category) {
+const getCompany = (category) => {
   const sorted = category.children.map((d) => d.volume).sort();
   return {
     word: category.word,
@@ -21,7 +21,7 @@ function getCompany(category) {
   }
 };
 
-function getCategory(timestamp) {
+const getCategory = (timestamp) => {
   return {
     word: timestamp.word,
     children: timestamp.children.map((category) => getCompany(category)),
@@ -39,7 +39,7 @@ function App() {
   const [ dataState, setDataState ] = useState([]);
   const [ indexState, setIndexState ] = useState(0);
 
-  const initializeData = () => {
+  useEffect(()=>{
     fetch(fetchApiEndpoint)
       .then((res) => {
         return res.json();
@@ -48,16 +48,12 @@ function App() {
         setDataState(topixFormat);
         setIndexState(topixFormat.length - 1);
       });
-  }
-
-  useEffect(()=>{
-    initializeData();
   }, []);
 
   return (
     <div className="App">
       <div id="container">
-        <h2>React D3.js line chart</h2>
+        <h2>React D3.js time-series word-cloud</h2>
         <Chart
           data={dataState}
           index={indexState}
