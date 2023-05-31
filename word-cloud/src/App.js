@@ -46,9 +46,12 @@ function App() {
       }).then((json) => {
         const topixFormat = json.map((d) => getCategory(d));
         setDataState(topixFormat);
-        setIndexState(topixFormat.length - 1);
       });
   }, []);
+
+  useEffect(()=>{
+    setIndexState(dataState.length - 1);
+  }, [dataState]);
 
   return (
     <div className="App">
