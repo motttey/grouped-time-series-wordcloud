@@ -199,7 +199,7 @@ function Chart(props) {
       .datum(timeSeries)
       .transition(transitionMax)
       .attr("fill", "none")
-      .attr("stroke", d3.schemeCategory10[groupIndex])
+      .attr("stroke", d3.interpolateCool(groupIndex/parentNames.length))
       .attr("stroke-width", 0.5)
       .attr("d", d3.line()
         .x((_, i) => xScale(i))
@@ -218,7 +218,7 @@ function Chart(props) {
     enterCircle.merge(updateCircle)
       .transition(transitionMax)
       .attr("fill", (_, i) =>
-        (i === index)? "orange": d3.schemeCategory10[groupIndex]
+        (i === index)? "orange": d3.interpolateCool(groupIndex/parentNames.length)
       )
       .attr("r", (_, i) =>
         (i === index)? 4: 3
@@ -279,7 +279,16 @@ function Chart(props) {
     const strokeWidth = 1;
     const chartSegmentLength = Math.ceil(data.length / 5);
 
-    const root = d3.hierarchy(specificTimeData);
+    const root = d3.hierarchy(specificTimeData)
+      .sum((d) => d.size) 
+      .sort((a, b) => {
+        return b.total - a.total;
+      })
+      .eachBefore((d) => {
+        // 各ノードの訪問前にインデックスを計算する
+        d.index = d.parent ? d.parent.index + "." + d.parent.children.indexOf(d) : "0";
+      });
+
     root.sum((d) => d.size);
 
     const treemap = d3.treemap()
@@ -309,9 +318,7 @@ function Chart(props) {
       .attr("width", (d) => d.x1 - d.x0 - strokeWidth)
       .attr("height", (d) => d.y1 - d.y0 - strokeWidth)
       .style("stroke", (d) =>  {
-        return (d.depth <= 1)
-         ? d3.schemeCategory10[parentNames.indexOf(d.data.word)]
-         : "none";
+         return d3.interpolateCool(parentNames.indexOf(d.data.word)/parentNames.length)
       })
       .style("stroke-width", (strokeWidth).toString() + "px")
       .style("opacity", (d) => {
@@ -332,9 +339,9 @@ function Chart(props) {
       .style("font-size", function (d) {
         return d3.min([d3.max([d.data.size, fontSizeMin]), fontSizeMax]).toString() + "px";
       })
-      .attr("fill", (d) => d3.schemeCategory10[
-        parentNames.indexOf(d?.parent?.data?.word)
-      ])
+      .attr("fill", (d) => {
+         return d3.interpolateCool(parentNames.indexOf(d?.parent?.data?.word)/parentNames.length)
+      })
       .attr("text-anchor", "middle")
       .style("font-family", "Impact")
       .attr("transform", function (d) {
