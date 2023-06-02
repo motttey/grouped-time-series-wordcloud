@@ -12,6 +12,11 @@ const lineChartSize = 75;
 const timelineHeight = 100;
 const maxLabelLength = 8;
 
+const fetchThemeColor = (d, arr) => {
+  if (!d || arr.length === 0) return "black";
+  return d3.interpolateRainbow(arr.indexOf(d)/arr.length);
+}
+
 function Chart(props) {
   const timelineSvg = d3.select("svg#timelineSvg")
     .attr("width", width + margin.left + margin.right)
@@ -178,7 +183,6 @@ function Chart(props) {
           + (treeMapData.x0 + treeMapWidth/2 - lineChartSize/2 + marginSparkLine) + ","
           + (treeMapData.y0 + treeMapHeight/2 + marginSparkLine) + ")");
 
-    const groupIndex = parentNames.indexOf(parent);
     const xScale = d3.scaleLinear()
       .domain([0, timeSeries.length])
       .range([0, lineChartSize - 10]);
@@ -199,7 +203,7 @@ function Chart(props) {
       .datum(timeSeries)
       .transition(transitionMax)
       .attr("fill", "none")
-      .attr("stroke", d3.interpolateCool(groupIndex/parentNames.length))
+      .attr("stroke", fetchThemeColor(parent, parentNames))
       .attr("stroke-width", 0.5)
       .attr("d", d3.line()
         .x((_, i) => xScale(i))
@@ -218,7 +222,7 @@ function Chart(props) {
     enterCircle.merge(updateCircle)
       .transition(transitionMax)
       .attr("fill", (_, i) =>
-        (i === index)? "orange": d3.interpolateCool(groupIndex/parentNames.length)
+        (i === index)? "orange": fetchThemeColor(parent, parentNames)
       )
       .attr("r", (_, i) =>
         (i === index)? 4: 3
@@ -318,7 +322,7 @@ function Chart(props) {
       .attr("width", (d) => d.x1 - d.x0 - strokeWidth)
       .attr("height", (d) => d.y1 - d.y0 - strokeWidth)
       .style("stroke", (d) =>  {
-         return d3.interpolateCool(parentNames.indexOf(d.data.word)/parentNames.length)
+         return fetchThemeColor(d.data.word, parentNames)
       })
       .style("stroke-width", (strokeWidth).toString() + "px")
       .style("opacity", (d) => {
@@ -340,7 +344,7 @@ function Chart(props) {
         return d3.min([d3.max([d.data.size, fontSizeMin]), fontSizeMax]).toString() + "px";
       })
       .attr("fill", (d) => {
-         return d3.interpolateCool(parentNames.indexOf(d?.parent?.data?.word)/parentNames.length)
+         return fetchThemeColor(d?.parent?.data?.word, parentNames)
       })
       .attr("text-anchor", "middle")
       .style("font-family", "Impact")
