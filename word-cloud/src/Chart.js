@@ -8,7 +8,8 @@ const margin = { top: 50, right: 50, bottom: 50, left: 50 };
 const marginSparkLine =  5;
 const fontSizeMin = 12;
 const fontSizeMax = 24;
-const lineChartSize = 75;
+const lineChartSizeX = 80;
+const lineChartSizeY = 150;
 const timelineHeight = 100;
 const maxLabelLength = 8;
 
@@ -180,16 +181,16 @@ function Chart(props) {
       .attr("height", treeMapHeight)
       .attr("transform",
           "translate("
-          + (treeMapData.x0 + treeMapWidth/2 - lineChartSize/2 + marginSparkLine) + ","
+          + (treeMapData.x0 + treeMapWidth/2 - lineChartSizeX/2 + marginSparkLine) + ","
           + (treeMapData.y0 + treeMapHeight/2 + marginSparkLine) + ")");
 
     const xScale = d3.scaleLinear()
       .domain([0, timeSeries.length])
-      .range([0, lineChartSize - 10]);
+      .range([0, lineChartSizeX - 10]);
 
     const yScale = d3.scaleLinear()
       .domain([0, d3.max(timeSeries, (t) => t?.close)])
-      .range([lineChartSize, 0]);
+      .range([lineChartSizeY, 0]);
 
     const updateLine = merged
       .selectAll("path.timeSeries")
