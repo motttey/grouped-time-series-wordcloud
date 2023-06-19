@@ -95,12 +95,13 @@ function Chart(props) {
       .enter()
       .append("circle")
       .attr("class", "timelineNode")
-      .attr("fill", "white")
+      .attr("fill", (_, i) => (i % 2 === 0) ? "white" : "none")
       .attr("r", nodeRadius)
-      .attr("stroke", "black")
-      .attr("stroke-width", 1)
+      .attr("stroke", "none")
+      .attr("stroke-width", (_, i) => (i % 2 === 0) ? 1 : 0)
       .attr("cx", (_, i) => xScale(i))
       .attr("cy", timelineHeight/2)
+      .style("pointer-events", (_, i) => (i % 2 === 0) ? "visible" : "none")
       .on("click", (_event, d) => {
         updateIndex(timeStampList.indexOf(d));
       });
@@ -114,13 +115,15 @@ function Chart(props) {
       .append("text")
       .attr("fill", "white")
       .attr("text-anchor", "middle")
-      .attr("transform", (d, i) => {
+      .attr("transform", (_, i) => {
         return "translate("
           + [ xScale(i), timelineHeight/2 - nodeRadius * 2 ]
           + ")rotate(" + 0 + ")";
       })
       .style("font-size", "10px")
       .style("font-family", "Impact")
+      .style("opacity", (_, i) => (i % 2 === 0) ? 1 : 0)
+      .style("pointer-events", (_, i) => (i % 2 === 0) ? "visible" : "none")
       .text((d) => {
         return data[d]["word"]
           .split("T")[0]
