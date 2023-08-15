@@ -28,13 +28,12 @@ const getCategory = (timestamp) => {
   }
 };
 
+const fetchApiEndpoint = 'https://vigorous-hamilton-7b091f.netlify.app/topix.json'
 function App() {
   const updateIndexFromChild = (index) => {
     setIndexState(index);
     setDataState(dataState);
   };
-
-  const fetchApiEndpoint = 'https://vigorous-hamilton-7b091f.netlify.app/topix.json'
 
   const [ dataState, setDataState ] = useState([]);
   const [ indexState, setIndexState ] = useState(0);
@@ -44,8 +43,7 @@ function App() {
       .then((res) => {
         return res.json();
       }).then((json) => {
-        const topixFormat = json.map((d) => getCategory(d));
-        setDataState(topixFormat);
+        setDataState(json.map((d) => getCategory(d)));
       });
   }, []);
 
