@@ -44,7 +44,10 @@ function App() {
         return res.json();
       }).then((json) => {
         setDataState(json.map((d) => getCategory(d)));
-      });
+      })
+      .catch((error) => {
+        console.log(error);
+      })
   }, []);
 
   useEffect(()=>{
