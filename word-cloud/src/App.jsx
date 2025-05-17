@@ -28,7 +28,7 @@ const getCategory = (timestamp) => {
   }
 };
 
-const fetchApiEndpoint = 'https://vigorous-hamilton-7b091f.netlify.app/topix.json'
+const fetchApiEndpoint = 'https://grouped-time-series-wordcloud-api.netlify.app/topix.json'
 function App() {
   const updateIndexFromChild = (index) => {
     setIndexState(index);
