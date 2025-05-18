@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Chart from './Chart';
 
 const getCompanyObject = (company, median) => {
