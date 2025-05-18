@@ -1,5 +1,6 @@
 import './App.css';
-import { useState, useEffect } from 'react';
+// import react for fix eslint errors
+import React, { useState, useEffect } from 'react';
 import Chart from './Chart';
 
 const getCompanyObject = (company, median) => {
