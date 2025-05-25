@@ -6,10 +6,10 @@ const height = 800;
 
 const margin = { top: 50, right: 50, bottom: 50, left: 50 };
 const marginSparkLine =  5;
-const fontSizeMin = 12;
-const fontSizeMax = 24;
-const lineChartSizeX = 80;
-const lineChartSizeY = 150;
+const fontSizeMin = 8;
+const fontSizeMax = 12;
+const lineChartSizeX = 50;
+const lineChartSizeY = 120;
 const timelineHeight = 100;
 const maxLabelLength = 8;
 
@@ -121,7 +121,7 @@ function Chart(props) {
           + ")rotate(" + 0 + ")";
       })
       .style("font-size", "10px")
-      .style("font-family", "Impact")
+      .style("font-weight", "Impact")
       .style("opacity", (_, i) => (i % 2 === 0) ? 1 : 0)
       .style("pointer-events", (_, i) => (i % 2 === 0) ? "visible" : "none")
       .text((d) => {
@@ -285,7 +285,9 @@ function Chart(props) {
     if (!data) return;
 
     const strokeWidth = 1;
-    const chartSegmentLength = Math.ceil(data.length / 5);
+
+    // チャートの中に何個点を描画するか
+    const chartSegmentLength = Math.ceil(data.length / 2);
 
     const root = d3.hierarchy(specificTimeData)
       .sum((d) => d.size) 
@@ -351,7 +353,7 @@ function Chart(props) {
          return fetchThemeColor(d?.parent?.data?.word, parentNames)
       })
       .attr("text-anchor", "middle")
-      .style("font-family", "Impact")
+      .style("font-weight", 700)
       .attr("transform", function (d) {
         return "translate("
           + [ d.x0 + (d.x1 - d.x0) / 2 - marginSparkLine,
