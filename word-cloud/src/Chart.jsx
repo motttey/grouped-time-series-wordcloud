@@ -1,7 +1,14 @@
 import React, { useCallback, useMemo, useEffect, useState } from 'react'
+import PropTypes from 'prop-types';
 import * as d3 from 'd3';
 
-const width = 800;
+Chart.propTypes = {
+  updateIndex: PropTypes.func.isRequired,
+  data: PropTypes.array,
+  index: PropTypes.number,
+};
+
+const width = 1000;
 const height = 800;
 
 const margin = { top: 50, right: 50, bottom: 50, left: 50 };
@@ -413,4 +420,5 @@ function Chart(props) {
     </div>
   );
 }
+
 export default Chart;
