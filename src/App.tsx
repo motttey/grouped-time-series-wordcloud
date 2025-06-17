@@ -2,8 +2,9 @@ import './App.css';
 // import react for fix eslint errors
 import React, { useState, useEffect } from 'react';
 import Chart from './Chart';
+import { CategoryNode, MarketDataNode, StockItem } from './types/stock';
 
-const getCompanyObject = (company, median) => {
+const getCompanyObject = (company: StockItem, median: number) => {
   return {
     word: company.word,
     close: company.close,
@@ -14,7 +15,7 @@ const getCompanyObject = (company, median) => {
   };
 };
 
-const getCompany = (category) => {
+const getCompany = (category: CategoryNode) => {
   const sorted = category.children.map((d) => d.volume).sort();
   return {
     word: category.word,
@@ -22,7 +23,7 @@ const getCompany = (category) => {
   }
 };
 
-const getCategory = (timestamp) => {
+const getCategory = (timestamp: MarketDataNode) => {
   return {
     word: timestamp.word,
     children: timestamp.children.map((category) => getCompany(category)),
@@ -31,7 +32,7 @@ const getCategory = (timestamp) => {
 
 const fetchApiEndpoint = 'https://grouped-time-series-wordcloud-api.netlify.app/topix.json'
 function App() {
-  const updateIndexFromChild = (index) => {
+  const updateIndexFromChild = (index: number) => {
     setIndexState(index);
     setDataState(dataState);
   };
@@ -44,7 +45,7 @@ function App() {
       .then((res) => {
         return res.json();
       }).then((json) => {
-        setDataState(json.map((d) => getCategory(d)));
+        setDataState(json.map((d: MarketDataNode) => getCategory(d)));
       })
       .catch((error) => {
         console.log(error);
