@@ -1,12 +1,19 @@
 import React, { useCallback, useMemo, useEffect, useState } from 'react'
-import PropTypes from 'prop-types';
 import * as d3 from 'd3';
+import { MarketDataNode as IMarketDataNode, StockItem } from './types/stock';
 
-Chart.propTypes = {
-  updateIndex: PropTypes.func.isRequired,
-  data: PropTypes.array,
-  index: PropTypes.number,
-};
+interface MarketDataNode extends IMarketDataNode {
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+}
+
+interface Props {
+  updateIndex: (index: number) => void,
+  data: Array<MarketDataNode>,
+  index: number
+}
 
 const width = 1000;
 const height = 800;
@@ -20,12 +27,12 @@ const lineChartSizeY = 120;
 const timelineHeight = 100;
 const maxLabelLength = 8;
 
-const fetchThemeColor = (d, arr) => {
+const fetchThemeColor = (d: any, arr: Array<any>) => {
   if (!d || arr.length === 0) return "black";
   return d3.interpolateRainbow(arr.indexOf(d)/arr.length);
 }
 
-function Chart(props) {
+function Chart(props: Props) {
   const timelineSvg = d3.select("svg#timelineSvg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", timelineHeight);
@@ -48,8 +55,13 @@ function Chart(props) {
     .style("width", width)
     .style("height", height + margin.bottom);
 
-  const [data, setData] = useState([]);
-  const [index, setIndex] = useState([]);
+  const [data, setData] = useState<Array<MarketDataNode>>([]);
+  const [index, setIndex] = useState<number>(0);
+  // タイムラインの描画
+  const [timeStampList, setTimeStampList] = useState<Array<string>>([])
+  const [transitionMax, setTransitionMax] = useState<number>(0)
+  const [specificTimeData, setSpecificTimeData] = useState<MarketDataNode>()
+
   useMemo(() => {
     const _data = props?.data || [];
     setData(_data)
@@ -60,13 +72,10 @@ function Chart(props) {
     setIndex(_index)
   }, [props.index])
 
-  // タイムラインの描画
-  const [timeStampList, setTimeStampList] = useState([])
   useEffect(() => {
     setTimeStampList(Object.keys(data));
   }, [data]);
 
-  const [transitionMax, setTransitionMax] = useState(0)
   useEffect(() => {
     if (index > 0) {
       setTransitionMax(0)
@@ -75,18 +84,17 @@ function Chart(props) {
     }
   }, [index]);
   
-  const [specificTimeData, setSpecificTimeData] = useState({})
   useEffect(() => {
     if (data.length > index && data[index]) {
       setSpecificTimeData(data[index]);
     }
   }, [data, index]);
 
-  const updateIndex = useCallback((index) => {
+  const updateIndex = useCallback((index: number) => {
     props.updateIndex(index)
   },[props])
 
-  const drawTimeLine = useCallback((data, timeStampList) => {
+  const drawTimeLine = useCallback((data: Array<MarketDataNode>, timeStampList: Array<string>) => {
     const xScale = d3.scaleLinear()
       .domain([0, timeStampList.length])
       .range([margin.right, width - margin.left]);
@@ -131,7 +139,7 @@ function Chart(props) {
       .style("font-weight", "Impact")
       .style("opacity", (_, i) => (i % 2 === 0) ? 1 : 0)
       .style("pointer-events", (_, i) => (i % 2 === 0) ? "visible" : "none")
-      .text((d) => {
+      .text((d: any) => {
         return data[d]["word"]
           .split("T")[0]
           .split("-").slice(1).join("/");
@@ -142,18 +150,18 @@ function Chart(props) {
       .append("line")
       .attr("stroke", "white")
       .attr("stroke-width", "2px")
-      .attr("x1", xScale(timeStampList[0]))
+      .attr("x1", xScale(timeStampList[0] as any))
       .attr("y1", timelineHeight/2)
-      .attr("x2", xScale(timeStampList[timeStampList.length - 1]))
+      .attr("x2", xScale(timeStampList[timeStampList.length - 1] as any))
       .attr("y2", timelineHeight/2);
   }, [updateIndex])
 
   const drawLinechart = useCallback((
-    treeMapData,
-    timeSeries,
-    parentNames,
-    parent,
-    chartSegmentLength
+    treeMapData: d3.HierarchyNode<any>,
+    timeSeries: Array<StockItem | undefined>,
+    parentNames: Array<string>,
+    parent: string,
+    chartSegmentLength: number
   ) => {
     if (!treeMapData || treeMapData.length === 0) return;
     if (!timeSeries || timeSeries.length === 0) return;
@@ -161,19 +169,19 @@ function Chart(props) {
     if (!parent) return;
 
     const targetId = "g#" + parent + "-" + treeMapData.data.code;
-    const treeMapWidth = treeMapData.x1 - treeMapData.x0;
-    const treeMapHeight = treeMapData.y1 - treeMapData.y0;
+    const treeMapWidth: number = ((treeMapData as any).x1 - (treeMapData as any).x0);
+    const treeMapHeight: number = ((treeMapData as any).y1 - (treeMapData as any).y0);
 
     d3.select("svg#treemapSvg").select("g#treemap").selectAll(targetId)
-      .data(treeMapData)
+      .data(treeMapData as any)
       .enter().append("g")
       .attr("id", parent + "-" + treeMapData.data.code)
       .attr("width", treeMapWidth)
       .attr("height", treeMapHeight)
       .attr("transform",
           "translate("
-          + (treeMapData.x0 + treeMapWidth/2) + ","
-          + (treeMapData.y0 + treeMapHeight/2) + ")"
+          + ((treeMapData as any).x0 + treeMapWidth/2) + ","
+          + ((treeMapData as any).y0 + treeMapHeight/2) + ")"
       );
 
     const updateLineChart = d3.select("svg#treemapSvg").select("g#treemap").selectAll(targetId)
@@ -183,7 +191,7 @@ function Chart(props) {
       .enter().append("g")
       .attr("class", parent + "-" + treeMapData.data.code);
 
-    const merged = enterLineChart.merge(updateLineChart);
+    const merged = enterLineChart.merge(updateLineChart as any);
     merged
       .transition()
       .duration(transitionMax)
@@ -191,15 +199,15 @@ function Chart(props) {
       .attr("height", treeMapHeight)
       .attr("transform",
           "translate("
-          + (treeMapData.x0 + treeMapWidth/2 - lineChartSizeX/2 + marginSparkLine) + ","
-          + (treeMapData.y0 + treeMapHeight/2 + marginSparkLine) + ")");
+          + (((treeMapData as any).x0 as any) + treeMapWidth/2 - lineChartSizeX/2 + marginSparkLine) + ","
+          + (((treeMapData as any).y0 as any) + treeMapHeight/2 + marginSparkLine) + ")");
 
     const xScale = d3.scaleLinear()
       .domain([0, timeSeries.length])
       .range([0, lineChartSizeX - 10]);
 
     const yScale = d3.scaleLinear()
-      .domain([0, d3.max(timeSeries, (t) => t?.close)])
+      .domain([0, d3.max(timeSeries, (t: any) => t.close)])
       .range([lineChartSizeY, 0]);
 
     const updateLine = merged
@@ -210,15 +218,15 @@ function Chart(props) {
       .enter().append("path")
       .attr("class", "timeSeries");
 
-    updateLine.merge(enterLine)
+    updateLine.merge(enterLine as any)
       .datum(timeSeries)
-      .transition(transitionMax)
+      .transition(transitionMax as any)
       .attr("fill", "none")
       .attr("stroke", fetchThemeColor(parent, parentNames))
       .attr("stroke-width", 0.5)
-      .attr("d", d3.line()
-        .x((_, i) => xScale(i))
-        .y((t) => yScale(t?.close))
+      .attr("d", (d3.line() as any)
+        .x((_: any, i: number) => xScale(i))
+        .y((t: any) => yScale(t.close as number))
       );
 
     const updateCircle = merged
@@ -230,8 +238,8 @@ function Chart(props) {
       .append("circle")
       .attr("class", "currentNode");
 
-    enterCircle.merge(updateCircle)
-      .transition(transitionMax)
+    enterCircle.merge(updateCircle as any)
+      .transition(transitionMax as any)
       .attr("fill", (_, i) =>
         (i === index)? "orange": fetchThemeColor(parent, parentNames)
       )
@@ -247,10 +255,10 @@ function Chart(props) {
         )? 1: 0
       )
       .attr("cx", (_, i) => xScale(i))
-      .attr("cy", (t) => yScale(t?.close));
+      .attr("cy", (t: any) => yScale(t?.close));
 
     merged.selectAll("circle.currentNode")
-      .on("click", (_, d) => {
+      .on("click", (_, d: any) => {
         updateIndex(timeSeries.indexOf(d));
       })
       .on("mouseover", (event) => {
@@ -273,8 +281,8 @@ function Chart(props) {
       .append("text")
       .attr("class", "currentCloseText");
 
-    enterCurrentCloseText.merge(updateCurrentCloseText)
-      .transition(transitionMax)
+    enterCurrentCloseText.merge(updateCurrentCloseText as any)
+      .transition(transitionMax as any)
       .style("font-size", "10px")
       .attr("fill", "yellow")
       .attr("text-anchor", "middle")
@@ -284,10 +292,10 @@ function Chart(props) {
               fontSizeMax ]
           + ")rotate(" + 0 + ")";
       })
-      .text((d) => d?.close);
+      .text((d: any) => d?.close);
   },[transitionMax, index, updateIndex])
 
-  const drawTreemap = useCallback((data, specificTimeData, transitionMax) => {
+  const drawTreemap = useCallback((data: Array<MarketDataNode>, specificTimeData: MarketDataNode | undefined, transitionMax: number) => {
     if (!specificTimeData) return;
     if (!data) return;
 
@@ -297,24 +305,22 @@ function Chart(props) {
     const chartSegmentLength = Math.ceil(data.length / 2);
 
     const root = d3.hierarchy(specificTimeData)
-      .sum((d) => d.size) 
-      .sort((a, b) => {
+      .sum((d: any) => d.size) 
+      .sort((a: any, b: any) => {
         return b.total - a.total;
       })
-      .eachBefore((d) => {
+      .eachBefore((d: any) => {
         // 各ノードの訪問前にインデックスを計算する
         d.index = d.parent ? d.parent.index + "." + d.parent.children.indexOf(d) : "0";
       });
 
-    root.sum((d) => d.size);
+    root.sum((d: any) => d.size);
 
-    const treemap = d3.treemap()
+    d3.treemap()
       .size([width, height])
       .padding(1)
-      .round(true);
-
-    treemap(root);
-
+      .round(true)(root as any);
+    
     const parentNames = specificTimeData.children?.map((d) => d.word) || [];
     const childLeaves = root.leaves();
 
@@ -324,21 +330,21 @@ function Chart(props) {
 
     const enterRect = updateRect
       .enter().append("rect")
-      .attr("class", "rect");
+      .attr("class", "rect") as any
 
     enterRect.merge(updateRect)
       .transition()
       .duration(transitionMax)
-      .attr("transform", (d) => {
+      .attr("transform", (d: any) => {
         return "translate(" + d.x0 + "," + (d.y0) + ")";
       })
-      .attr("width", (d) => d.x1 - d.x0 - strokeWidth)
-      .attr("height", (d) => d.y1 - d.y0 - strokeWidth)
-      .style("stroke", (d) =>  {
+      .attr("width", (d: any) => d.x1 - d.x0 - strokeWidth)
+      .attr("height", (d: any) => d.y1 - d.y0 - strokeWidth)
+      .style("stroke", (d: any) =>  {
          return fetchThemeColor(d.data.word, parentNames)
       })
       .style("stroke-width", (strokeWidth).toString() + "px")
-      .style("opacity", (d) => {
+      .style("opacity", (d: any) => {
         return (d.depth <= 1)? 1 : 0;
       });
 
@@ -350,10 +356,10 @@ function Chart(props) {
       .enter().append("text")
       .attr("class", "text");
     
-    enterText.merge(updateText)
+    enterText.merge(updateText as any)
       .transition()
       .duration(transitionMax)
-      .style("font-size", function (d) {
+      .style("font-size", (d: any) => {
         return d3.min([d3.max([d.data.size, fontSizeMin]), fontSizeMax]).toString() + "px";
       })
       .attr("fill", (d) => {
@@ -361,7 +367,7 @@ function Chart(props) {
       })
       .attr("text-anchor", "middle")
       .style("font-weight", 700)
-      .attr("transform", function (d) {
+      .attr("transform", (d: any) => {
         return "translate("
           + [ d.x0 + (d.x1 - d.x0) / 2 - marginSparkLine,
               d.y0 + (d.y1 - d.y0) / 2 - marginSparkLine ]
@@ -375,16 +381,18 @@ function Chart(props) {
     childLeaves
       .forEach((d, _) => {
         const parent = d?.parent?.data?.word;
-        const groupSeries = data
-          .map(
-            (v) => v?.children[parentNames.indexOf(parent)]
-          )
-          .map(
-            (v) => v?.children.find((e) => e.word === d.data.word)
-          );
-        drawLinechart(d, groupSeries, parentNames, parent, chartSegmentLength);
+        if (parent) {
+          const groupSeries = data
+            .map(
+              (v) => v?.children[parentNames.indexOf(parent)]
+            )
+            .map(
+              (v) => v?.children.find((e) => e.word === d.data.word)
+            );
+          drawLinechart(d as any, groupSeries, parentNames, parent, chartSegmentLength);
+        }
       });
-  }, [drawLinechart]); // 依存関係にdrawLineChartを追加
+  }, [drawLinechart]);
 
   useEffect(() => {
     drawTimeLine(data, timeStampList);
@@ -399,7 +407,7 @@ function Chart(props) {
     timelineSvg
     .select("g#timeline")
     .selectAll("circle")
-    .attr("stroke", (d) => {
+    .attr("stroke", (d: any) => {
       return (timeStampList.indexOf(d) === index)?
         "red" : "white";
     });

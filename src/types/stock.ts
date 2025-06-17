@@ -4,6 +4,7 @@ export interface StockItem {
   close: number;      // 終値
   volume: number;     // 出来高
   total: number;      // 売買代金
+  size?: number;       // サイズ
 };
 
 export interface CategoryNode {
