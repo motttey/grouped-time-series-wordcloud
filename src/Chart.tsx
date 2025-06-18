@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useEffect, useState } from 'react'
+import { useCallback, useMemo, useEffect, useState } from 'react'
 import * as d3 from 'd3';
 import { MarketDataNode as IMarketDataNode, StockItem } from './types/stock';
 
@@ -27,7 +27,7 @@ const lineChartSizeY = 120;
 const timelineHeight = 100;
 const maxLabelLength = 8;
 
-const fetchThemeColor = (d: any, arr: Array<any>) => {
+const fetchThemeColor = (d: string, arr: Array<string>) => {
   if (!d || arr.length === 0) return "black";
   return d3.interpolateRainbow(arr.indexOf(d)/arr.length);
 }
@@ -57,6 +57,7 @@ function Chart(props: Props) {
 
   const [data, setData] = useState<Array<MarketDataNode>>([]);
   const [index, setIndex] = useState<number>(0);
+
   // タイムラインの描画
   const [timeStampList, setTimeStampList] = useState<Array<string>>([])
   const [transitionMax, setTransitionMax] = useState<number>(0)
@@ -335,11 +336,11 @@ function Chart(props: Props) {
     enterRect.merge(updateRect)
       .transition()
       .duration(transitionMax)
-      .attr("transform", (d: any) => {
+      .attr("transform", (d: MarketDataNode) => {
         return "translate(" + d.x0 + "," + (d.y0) + ")";
       })
-      .attr("width", (d: any) => d.x1 - d.x0 - strokeWidth)
-      .attr("height", (d: any) => d.y1 - d.y0 - strokeWidth)
+      .attr("width", (d: MarketDataNode) => d.x1 - d.x0 - strokeWidth)
+      .attr("height", (d: MarketDataNode) => d.y1 - d.y0 - strokeWidth)
       .style("stroke", (d: any) =>  {
          return fetchThemeColor(d.data.word, parentNames)
       })
@@ -363,7 +364,7 @@ function Chart(props: Props) {
         return d3.min([d3.max([d.data.size, fontSizeMin]), fontSizeMax]).toString() + "px";
       })
       .attr("fill", (d) => {
-         return fetchThemeColor(d?.parent?.data?.word, parentNames)
+         return fetchThemeColor(d?.parent?.data?.word || '', parentNames)
       })
       .attr("text-anchor", "middle")
       .style("font-weight", 700)
