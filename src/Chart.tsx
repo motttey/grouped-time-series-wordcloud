@@ -238,7 +238,7 @@ function Chart(props: Props) {
         .attr('stroke-width', 0.5)
         .attr(
           'd',
-          (d3.line() as any).x((_: any, i: number) => xScale(i)).y((t: any) => yScale(t.close as number)),
+          (d3.line() as any).x((_: any, i: number) => xScale(i)).y((t: any) => (t ? yScale(t.close as number) : 0)),
         )
 
       const updateCircle = merged.selectAll('circle.currentNode').data(timeSeries)
@@ -312,7 +312,9 @@ function Chart(props: Props) {
       d3.treemap().size([width, height]).padding(1).round(true)(root as any)
 
       const parentNames = specificTimeData.children?.map((d) => d.word) || []
-      const childLeaves = root.leaves()
+
+      // Sort childLeaves by volume
+      const childLeaves = root.leaves().sort((a: any, b: any) => b.data.volume - a.data.volume)
 
       const svg = d3.select('svg#treemapSvg')
       const updateRect = svg.select('g#treemap').selectAll('rect').data(root)
@@ -336,13 +338,22 @@ function Chart(props: Props) {
           return d.depth <= 1 ? 1 : 0
         })
 
+      const allStockItems = specificTimeData.children.reduce(
+        (acc: StockItem[], category) => acc.concat(category.children),
+        [],
+      )
+      allStockItems.sort((a, b) => b.volume - a.volume)
+      const top20StockItems = allStockItems.slice(0, 20)
+      console.log(top20StockItems)
+
       if (!childLeaves) return
       const updateText = svg.select('g#treemap').selectAll('text').data(childLeaves)
 
       const enterText = updateText.enter().append('text').attr('class', 'text')
 
-      enterText
-        .merge(updateText as any)
+      const text = enterText.merge(updateText as any)
+
+      text
         .transition()
         .duration(transitionMax)
         .style('font-size', (d: any) => {
@@ -362,10 +373,25 @@ function Chart(props: Props) {
             ')'
           )
         })
-        .text((d) => {
-          return d?.data?.word?.length < maxLabelLength
-            ? d.data.word
-            : d?.data?.word?.slice(0, maxLabelLength - 1) + '...'
+        .text((d, i) => {
+          if (i < 50) {
+            return d?.data?.word?.length < maxLabelLength
+              ? d.data.word
+              : d?.data?.word?.slice(0, maxLabelLength - 1) + '...'
+          } else {
+            return ''
+          }
+        })
+
+      text
+        .classed('hidden', (d: any) => {
+          return !top20StockItems.some((item) => item.word === d.data.word)
+        })
+        .on('mouseover', function () {
+          d3.select(this).classed('hidden', false)
+        })
+        .on('mouseout', function () {
+          d3.select(this).classed('hidden', true)
         })
 
       childLeaves.forEach((d, _) => {

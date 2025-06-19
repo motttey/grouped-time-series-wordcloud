@@ -2,6 +2,10 @@ body {
   background-color: #333333;
 }
 
+.hidden {
+  opacity: 0;
+}
+
 .App {
   text-align: center;
   color: #ffffe0;
