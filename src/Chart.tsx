@@ -261,11 +261,19 @@ function Chart(props: Props) {
         .on('click', (_, d: any) => {
           updateIndex(timeSeries.indexOf(d))
         })
-        .on('mouseover', (event) => {
-          d3.select(event.currentTarget).attr('stroke', 'red').attr('stroke-width', 2)
+        .on('mouseenter', (event, d: any) => {
+          const correspondingText = d3
+            .select(event.currentTarget.parentNode.parentNode)
+            .selectAll('text')
+            .filter((textData: any) => textData.data && textData.data.word === d.word)
+          correspondingText.style('visibility', 'visible')
         })
-        .on('mouseout', (event) => {
-          d3.select(event.currentTarget).attr('stroke', 'black').attr('stroke-width', 1)
+        .on('mouseleave', (event, d: any) => {
+          const correspondingText = d3
+            .select(event.currentTarget.parentNode.parentNode)
+            .selectAll('text')
+            .filter((textData: any) => textData.data && textData.data.word === d.word)
+          correspondingText.style('visibility', 'hidden')
         })
 
       const updateCurrentCloseText = merged.selectAll('text.currentCloseText').data([timeSeries[index]])
@@ -344,7 +352,6 @@ function Chart(props: Props) {
       )
       allStockItems.sort((a, b) => b.volume - a.volume)
       const top20StockItems = allStockItems.slice(0, 20)
-      console.log(top20StockItems)
 
       if (!childLeaves) return
       const updateText = svg.select('g#treemap').selectAll('text').data(childLeaves)
@@ -374,25 +381,14 @@ function Chart(props: Props) {
           )
         })
         .text((d, i) => {
-          if (i < 50) {
-            return d?.data?.word?.length < maxLabelLength
-              ? d.data.word
-              : d?.data?.word?.slice(0, maxLabelLength - 1) + '...'
-          } else {
-            return ''
-          }
+          return d?.data?.word?.length < maxLabelLength
+            ? d.data.word
+            : d?.data?.word?.slice(0, maxLabelLength - 1) + '...'
         })
 
-      text
-        .classed('hidden', (d: any) => {
-          return !top20StockItems.some((item) => item.word === d.data.word)
-        })
-        .on('mouseover', function () {
-          d3.select(this).classed('hidden', false)
-        })
-        .on('mouseout', function () {
-          d3.select(this).classed('hidden', true)
-        })
+      text.style('visibility', (d: any) => {
+        return !top20StockItems.some((item) => item.word === d.data.word) ? 'hidden' : 'visible'
+      })
 
       childLeaves.forEach((d, _) => {
         const parent = d?.parent?.data?.word
