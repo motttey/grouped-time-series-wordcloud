@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect, useState } from 'react'
+import { useCallback, useMemo, useEffect, useState, useRef } from 'react'
 import * as d3 from 'd3'
 import { MarketDataNode as IMarketDataNode, StockItem } from './types/stock'
 
@@ -7,6 +7,9 @@ interface MarketDataNode extends IMarketDataNode {
   x1: number
   y0: number
   y1: number
+  depth?: number
+  volume?: number
+  size?: number
 }
 
 interface Props {
@@ -31,9 +34,11 @@ const fontSizeMin = 8
 const fontSizeMax = 12
 const lineChartSizeX = 50
 const lineChartSizeY = 120
-const timelineHeight = 100
 const maxLabelLength = 8
 const topStockItemsNum = 30
+const nodeRadius = 10
+const timelineHeight = 100
+const strokeWidth = 1
 
 const fetchThemeColor = (d: string, arr: Array<string>) => {
   if (!d || arr.length === 0) return 'black'
@@ -41,43 +46,21 @@ const fetchThemeColor = (d: string, arr: Array<string>) => {
 }
 
 function Chart(props: Props) {
-  const timelineSvg = d3
-    .select('svg#timelineSvg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', timelineHeight)
+  const timelineSvgRef = useRef<d3.Selection<SVGSVGElement, undefined, null, undefined> | null>(null)
+  const treemapSvgRef = useRef<d3.Selection<SVGSVGElement, undefined, null, undefined> | null>(null)
 
-  timelineSvg.select('g#timeline').style('width', width).style('height', height)
-
-  const svg = d3
-    .select('svg#treemapSvg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-
-  svg.select('g#wordCloud').style('width', width).style('height', height)
-
-  svg
-    .select('g#treemap')
-    .attr('transform', 'translate(' + 0 + ',' + 0 + ')')
-    .style('width', width)
-    .style('height', height + margin.bottom)
-
-  const [data, setData] = useState<Array<MarketDataNode>>([])
-  const [index, setIndex] = useState<number>(0)
+  const data = props?.data
+  const index = props?.index
 
   // タイムラインの描画
   const [timeStampList, setTimeStampList] = useState<Array<string>>([])
   const [transitionMax, setTransitionMax] = useState<number>(0)
   const [specificTimeData, setSpecificTimeData] = useState<MarketDataNode>()
 
-  useMemo(() => {
-    const _data = props?.data || []
-    setData(_data)
-  }, [props.data])
-
-  useMemo(() => {
-    const _index = props?.index || 0
-    setIndex(_index)
-  }, [props.index])
+  useEffect(() => {
+    timelineSvgRef.current = d3.select('svg#timelineSvg') as any
+    treemapSvgRef.current = d3.select('svg#treemapSvg') as any
+  }, [])
 
   useEffect(() => {
     setTimeStampList(Object.keys(data))
@@ -111,9 +94,8 @@ function Chart(props: Props) {
         .domain([0, timeStampList.length])
         .range([margin.right, width - margin.left])
 
-      const nodeRadius = 10
-      const timelineHeight = 100
-      const timelineSvg = d3.select('svg#timelineSvg')
+      const timelineSvg = timelineSvgRef.current
+      if (!timelineSvg) return
       // ノードを作成
       timelineSvg
         .select('g#timeline')
@@ -182,7 +164,10 @@ function Chart(props: Props) {
       const treeMapWidth: number = (treeMapData as any).x1 - (treeMapData as any).x0
       const treeMapHeight: number = (treeMapData as any).y1 - (treeMapData as any).y0
 
-      d3.select('svg#treemapSvg')
+      const treemapSvg = treemapSvgRef.current
+      if (!treemapSvg) return
+
+      treemapSvg
         .select('g#treemap')
         .selectAll(targetId)
         .data(treeMapData as any)
@@ -200,7 +185,7 @@ function Chart(props: Props) {
             ')',
         )
 
-      const updateLineChart = d3.select('svg#treemapSvg').select('g#treemap').selectAll(targetId).data(treeMapData)
+      const updateLineChart = treemapSvg.select('g#treemap').selectAll(targetId).data(treeMapData)
 
       const enterLineChart = updateLineChart
         .enter()
@@ -308,33 +293,37 @@ function Chart(props: Props) {
       if (!specificTimeData) return
       if (!data) return
 
-      const strokeWidth = 1
-
       // チャートの中に何個点を描画するか
-      const chartSegmentLength = Math.ceil(data.length / 2)
+      const chartSegmentLength = Math.ceil(data.length / 1.5)
 
-      const root = d3
+      const root: d3.HierarchyNode<MarketDataNode> = d3
         .hierarchy(specificTimeData)
-        .sum((d: any) => d.size)
-        .sort((a: any, b: any) => {
-          return b.total - a.total
+        .sum((d: MarketDataNode) => d.size || 0)
+        .sort((a, b) => {
+          return (a.data.volume || 0) - (b.data.volume || 0)
         })
         .eachBefore((d: any) => {
           // 各ノードの訪問前にインデックスを計算する
           d.index = d.parent ? d.parent.index + '.' + d.parent.children.indexOf(d) : '0'
         })
 
-      root.sum((d: any) => d.size)
+      root.sum((d) => d.size || 0)
 
       d3.treemap().size([width, height]).padding(1).round(true)(root as any)
 
       const parentNames = specificTimeData.children?.map((d) => d.word) || []
 
       // Sort childLeaves by volume
-      const childLeaves = root.leaves().sort((a: any, b: any) => b.data.volume - a.data.volume)
+      const childLeaves = root
+        .leaves()
+        .sort(
+          (a: d3.HierarchyNode<MarketDataNode>, b: d3.HierarchyNode<MarketDataNode>) =>
+            (b.data?.volume ?? 0) - (a.data?.volume ?? 0),
+        )
 
-      const svg = d3.select('svg#treemapSvg')
-      const updateRect = svg.select('g#treemap').selectAll('rect').data(root)
+      const treemapSvg = treemapSvgRef.current
+      if (!treemapSvg) return
+      const updateRect = treemapSvg.select('g#treemap').selectAll('rect').data(root)
 
       const enterRect = updateRect.enter().append('rect').attr('class', 'rect') as any
 
@@ -347,12 +336,12 @@ function Chart(props: Props) {
         })
         .attr('width', (d: MarketDataNode) => d.x1 - d.x0 - strokeWidth)
         .attr('height', (d: MarketDataNode) => d.y1 - d.y0 - strokeWidth)
-        .style('stroke', (d: any) => {
-          return fetchThemeColor(d.data.word, parentNames)
+        .style('stroke', (d: TextDatum) => {
+          return fetchThemeColor(d?.data?.word || '', parentNames)
         })
         .style('stroke-width', strokeWidth.toString() + 'px')
-        .style('opacity', (d: any) => {
-          return d.depth <= 1 ? 1 : 0
+        .style('opacity', (d: MarketDataNode) => {
+          return d.depth || 0 <= 1 ? 1 : 0
         })
 
       const allStockItems = specificTimeData.children.reduce(
@@ -363,7 +352,7 @@ function Chart(props: Props) {
       const topStockItems = allStockItems.slice(0, topStockItemsNum)
 
       if (!childLeaves) return
-      const updateText = svg.select('g#treemap').selectAll('text').data(childLeaves)
+      const updateText = treemapSvg.select('g#treemap').selectAll('text').data(childLeaves)
 
       const enterText = updateText.enter().append('text').attr('class', 'text')
 
@@ -422,13 +411,15 @@ function Chart(props: Props) {
 
   useEffect(() => {
     const timeStampList = Object.keys(data)
-    timelineSvg
-      .select('g#timeline')
-      .selectAll('circle')
-      .attr('stroke', (d: any) => {
-        return timeStampList.indexOf(d) === index ? 'red' : 'white'
-      })
-  }, [data, index, timelineSvg])
+    if (timelineSvgRef.current) {
+      timelineSvgRef.current
+        .select('g#timeline')
+        .selectAll('circle')
+        .attr('stroke', (d) => {
+          return timeStampList.indexOf(d as string) === index ? 'red' : 'white'
+        })
+    }
+  }, [data, index])
 
   return (
     <div>
