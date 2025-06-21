@@ -3,13 +3,17 @@ import * as d3 from 'd3'
 import { MarketDataNode as IMarketDataNode, StockItem } from './types/stock'
 
 interface MarketDataNode extends IMarketDataNode {
+  code: string
+  depth?: number
+  volume?: number
+  size?: number
+}
+
+interface TreeMapData extends d3.HierarchyNode<MarketDataNode> {
   x0: number
   x1: number
   y0: number
   y1: number
-  depth?: number
-  volume?: number
-  size?: number
 }
 
 interface Props {
@@ -46,8 +50,8 @@ const fetchThemeColor = (d: string, arr: Array<string>) => {
 }
 
 function Chart(props: Props) {
-  const timelineSvgRef = useRef<d3.Selection<SVGSVGElement, undefined, null, undefined> | null>(null)
-  const treemapSvgRef = useRef<d3.Selection<SVGSVGElement, undefined, null, undefined> | null>(null)
+  const timelineSvgRef = useRef<d3.Selection<SVGSVGElement, undefined, HTMLElement, unknown> | null>(null)
+  const treemapSvgRef = useRef<d3.Selection<SVGSVGElement, undefined, HTMLElement, unknown> | null>(null)
 
   const data = props?.data
   const index = props?.index
@@ -58,8 +62,8 @@ function Chart(props: Props) {
   const [specificTimeData, setSpecificTimeData] = useState<MarketDataNode>()
 
   useEffect(() => {
-    timelineSvgRef.current = d3.select('svg#timelineSvg') as any
-    treemapSvgRef.current = d3.select('svg#treemapSvg') as any
+    timelineSvgRef.current = d3.select<SVGSVGElement, any>('svg#timelineSvg')
+    treemapSvgRef.current = d3.select<SVGSVGElement, any>('svg#treemapSvg')
   }, [])
 
   useEffect(() => {
@@ -140,9 +144,9 @@ function Chart(props: Props) {
         .append('line')
         .attr('stroke', 'white')
         .attr('stroke-width', '2px')
-        .attr('x1', xScale(timeStampList[0] as any))
+        .attr('x1', xScale(0))
         .attr('y1', timelineHeight / 2)
-        .attr('x2', xScale(timeStampList[timeStampList.length - 1] as any))
+        .attr('x2', xScale(timeStampList.length - 1))
         .attr('y2', timelineHeight / 2)
     },
     [updateIndex],
@@ -150,7 +154,7 @@ function Chart(props: Props) {
 
   const drawLinechart = useCallback(
     (
-      treeMapData: d3.HierarchyNode<any>,
+      treeMapData: TreeMapData,
       timeSeries: Array<StockItem | undefined>,
       parentNames: Array<string>,
       parent: string,
@@ -158,11 +162,10 @@ function Chart(props: Props) {
     ) => {
       if (!treeMapData || treeMapData.length === 0) return
       if (!timeSeries || timeSeries.length === 0) return
-      if (!parentNames) return
 
       const targetId = 'g#' + parent + '-' + treeMapData.data.code
-      const treeMapWidth: number = (treeMapData as any).x1 - (treeMapData as any).x0
-      const treeMapHeight: number = (treeMapData as any).y1 - (treeMapData as any).y0
+      const treeMapWidth: number = treeMapData.x1 - treeMapData.x0
+      const treeMapHeight: number = treeMapData.y1 - treeMapData.y0
 
       const treemapSvg = treemapSvgRef.current
       if (!treemapSvg) return
@@ -170,7 +173,7 @@ function Chart(props: Props) {
       treemapSvg
         .select('g#treemap')
         .selectAll(targetId)
-        .data(treeMapData as any)
+        .data(treeMapData)
         .enter()
         .append('g')
         .attr('id', parent + '-' + treeMapData.data.code)
@@ -178,11 +181,7 @@ function Chart(props: Props) {
         .attr('height', treeMapHeight)
         .attr(
           'transform',
-          'translate(' +
-            ((treeMapData as any).x0 + treeMapWidth / 2) +
-            ',' +
-            ((treeMapData as any).y0 + treeMapHeight / 2) +
-            ')',
+          'translate(' + (treeMapData.x0 + treeMapWidth / 2) + ',' + (treeMapData.y0 + treeMapHeight / 2) + ')',
         )
 
       const updateLineChart = treemapSvg.select('g#treemap').selectAll(targetId).data(treeMapData)
@@ -201,9 +200,9 @@ function Chart(props: Props) {
         .attr(
           'transform',
           'translate(' +
-            (((treeMapData as any).x0 as any) + treeMapWidth / 2 - lineChartSizeX / 2 + marginSparkLine) +
+            (treeMapData.x0 + treeMapWidth / 2 - lineChartSizeX / 2 + marginSparkLine) +
             ',' +
-            (((treeMapData as any).y0 as any) + treeMapHeight / 2 + marginSparkLine) +
+            (treeMapData.y0 + treeMapHeight / 2 + marginSparkLine) +
             ')',
         )
 
@@ -214,7 +213,13 @@ function Chart(props: Props) {
 
       const yScale = d3
         .scaleLinear()
-        .domain([0, d3.max(timeSeries, (t: any) => t.close)])
+        .domain([
+          0,
+          d3.max(
+            timeSeries.filter((t) => t !== undefined),
+            (t) => (t as StockItem).close as number,
+          ) || 0,
+        ])
         .range([lineChartSizeY, 0])
 
       const updateLine = merged.selectAll('path.timeSeries').data(timeSeries)
@@ -224,24 +229,28 @@ function Chart(props: Props) {
       updateLine
         .merge(enterLine as any)
         .datum(timeSeries)
-        .transition(transitionMax as any)
+        .transition()
+        .duration(transitionMax)
         .attr('fill', 'none')
         .attr('stroke', fetchThemeColor(parent, parentNames))
         .attr('stroke-width', 0.5)
         .attr(
           'd',
-          (d3.line() as any)
-            .x((_: any, i: number) => xScale(i))
-            .y((t: StockItem) => (t ? yScale(t.close as number) : 0)),
+          d3
+            .line<StockItem | undefined>()
+            .x((d, i) => xScale(i))
+            .y((d) => (d ? yScale(d.close as number) : 0))(timeSeries),
         )
 
-      const updateCircle = merged.selectAll('circle.currentNode').data(timeSeries)
+      const filteredTimeSeries = (timeSeries as StockItem[]).filter((t) => t !== undefined)
+      const updateCircle = merged.selectAll('circle.currentNode').data(filteredTimeSeries)
 
       const enterCircle = updateCircle.enter().append('circle').attr('class', 'currentNode')
 
       enterCircle
         .merge(updateCircle as any)
-        .transition(transitionMax as any)
+        .transition()
+        .duration(transitionMax)
         .attr('fill', (_, i) => (i === index ? 'orange' : fetchThemeColor(parent, parentNames)))
         .attr('r', (_, i) => (i === index ? 4 : 3))
         .attr('stroke', 'black')
@@ -276,14 +285,15 @@ function Chart(props: Props) {
 
       enterCurrentCloseText
         .merge(updateCurrentCloseText as any)
-        .transition(transitionMax as any)
+        .transition()
+        .duration(transitionMax)
         .style('font-size', '10px')
         .attr('fill', 'yellow')
         .attr('text-anchor', 'middle')
         .attr('transform', () => {
           return 'translate(' + [xScale(index), fontSizeMax] + ')rotate(' + 0 + ')'
         })
-        .text((d: any) => d?.close)
+        .text((d) => d?.close?.toString() || '')
     },
     [transitionMax, index, updateIndex],
   )
@@ -331,11 +341,11 @@ function Chart(props: Props) {
         .merge(updateRect)
         .transition()
         .duration(transitionMax)
-        .attr('transform', (d: MarketDataNode) => {
+        .attr('transform', (d: TreeMapData) => {
           return 'translate(' + d.x0 + ',' + d.y0 + ')'
         })
-        .attr('width', (d: MarketDataNode) => d.x1 - d.x0 - strokeWidth)
-        .attr('height', (d: MarketDataNode) => d.y1 - d.y0 - strokeWidth)
+        .attr('width', (d: TreeMapData) => d.x1 - d.x0 - strokeWidth)
+        .attr('height', (d: TreeMapData) => d.y1 - d.y0 - strokeWidth)
         .style('stroke', (d: TextDatum) => {
           return fetchThemeColor(d?.data?.word || '', parentNames)
         })
@@ -384,8 +394,8 @@ function Chart(props: Props) {
             : d?.data?.word?.slice(0, maxLabelLength - 1) + '...'
         })
 
-      text.style('visibility', (d: any) => {
-        return !topStockItems.some((item) => item.word === d.data.word) ? 'hidden' : 'visible'
+      text.style('visibility', (d: TextDatum) => {
+        return !topStockItems.some((item) => item.word === d.data?.word) ? 'hidden' : 'visible'
       })
 
       childLeaves.forEach((d, _) => {
@@ -394,7 +404,7 @@ function Chart(props: Props) {
           const groupSeries = data
             .map((v) => v?.children[parentNames.indexOf(parent)])
             .map((v) => v?.children.find((e) => e.word === d.data.word))
-          drawLinechart(d as any, groupSeries, parentNames, parent, chartSegmentLength)
+          drawLinechart(d as TreeMapData, groupSeries, parentNames, parent, chartSegmentLength)
         }
       })
     },
