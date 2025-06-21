@@ -15,6 +15,13 @@ interface Props {
   index: number
 }
 
+interface TextDatum {
+  data?: {
+    word: string;
+    [key: string]: any;
+  };
+}
+
 const width = 1000
 const height = 800
 
@@ -26,6 +33,7 @@ const lineChartSizeX = 50
 const lineChartSizeY = 120
 const timelineHeight = 100
 const maxLabelLength = 8
+const topStockItemsNum = 30
 
 const fetchThemeColor = (d: string, arr: Array<string>) => {
   if (!d || arr.length === 0) return 'black'
@@ -169,7 +177,6 @@ function Chart(props: Props) {
       if (!treeMapData || treeMapData.length === 0) return
       if (!timeSeries || timeSeries.length === 0) return
       if (!parentNames) return
-      if (!parent) return
 
       const targetId = 'g#' + parent + '-' + treeMapData.data.code
       const treeMapWidth: number = (treeMapData as any).x1 - (treeMapData as any).x0
@@ -265,14 +272,14 @@ function Chart(props: Props) {
           const correspondingText = d3
             .select(event.currentTarget.parentNode.parentNode)
             .selectAll('text')
-            .filter((textData: any) => textData.data && textData.data.word === d.word)
+            .filter((textData: any) => (textData as TextDatum)?.data?.word === d.word)
           correspondingText.style('visibility', 'visible')
         })
         .on('mouseleave', (event, d: any) => {
           const correspondingText = d3
             .select(event.currentTarget.parentNode.parentNode)
             .selectAll('text')
-            .filter((textData: any) => textData.data && textData.data.word === d.word)
+            .filter((textData: any) => (textData as TextDatum)?.data?.word === d.word)
           correspondingText.style('visibility', 'hidden')
         })
 
@@ -351,7 +358,7 @@ function Chart(props: Props) {
         [],
       )
       allStockItems.sort((a, b) => b.volume - a.volume)
-      const top20StockItems = allStockItems.slice(0, 20)
+      const topStockItems = allStockItems.slice(0, topStockItemsNum)
 
       if (!childLeaves) return
       const updateText = svg.select('g#treemap').selectAll('text').data(childLeaves)
@@ -380,14 +387,14 @@ function Chart(props: Props) {
             ')'
           )
         })
-        .text((d, i) => {
+        .text((d) => {
           return d?.data?.word?.length < maxLabelLength
             ? d.data.word
             : d?.data?.word?.slice(0, maxLabelLength - 1) + '...'
         })
 
       text.style('visibility', (d: any) => {
-        return !top20StockItems.some((item) => item.word === d.data.word) ? 'hidden' : 'visible'
+        return !topStockItems.some((item) => item.word === d.data.word) ? 'hidden' : 'visible'
       })
 
       childLeaves.forEach((d, _) => {
