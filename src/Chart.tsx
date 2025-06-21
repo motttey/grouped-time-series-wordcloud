@@ -17,9 +17,9 @@ interface Props {
 
 interface TextDatum {
   data?: {
-    word: string;
-    [key: string]: any;
-  };
+    word: string
+    [key: string]: any
+  }
 }
 
 const width = 1000
@@ -245,7 +245,9 @@ function Chart(props: Props) {
         .attr('stroke-width', 0.5)
         .attr(
           'd',
-          (d3.line() as any).x((_: any, i: number) => xScale(i)).y((t: any) => (t ? yScale(t.close as number) : 0)),
+          (d3.line() as any)
+            .x((_: any, i: number) => xScale(i))
+            .y((t: StockItem) => (t ? yScale(t.close as number) : 0)),
         )
 
       const updateCircle = merged.selectAll('circle.currentNode').data(timeSeries)
@@ -261,25 +263,25 @@ function Chart(props: Props) {
         .attr('stroke-width', 1)
         .attr('opacity', (_, i) => (i === index || i === timeSeries.length - 1 || i % chartSegmentLength === 0 ? 1 : 0))
         .attr('cx', (_, i) => xScale(i))
-        .attr('cy', (t: any) => yScale(t?.close))
+        .attr('cy', (t) => yScale((t as StockItem).close))
 
       merged
         .selectAll('circle.currentNode')
-        .on('click', (_, d: any) => {
-          updateIndex(timeSeries.indexOf(d))
+        .on('click', (_, d) => {
+          updateIndex(timeSeries.indexOf(d as StockItem))
         })
-        .on('mouseenter', (event, d: any) => {
+        .on('mouseenter', (event, d) => {
           const correspondingText = d3
             .select(event.currentTarget.parentNode.parentNode)
             .selectAll('text')
-            .filter((textData: any) => (textData as TextDatum)?.data?.word === d.word)
+            .filter((textData) => (textData as TextDatum)?.data?.word === (d as StockItem).word)
           correspondingText.style('visibility', 'visible')
         })
-        .on('mouseleave', (event, d: any) => {
+        .on('mouseleave', (event, d) => {
           const correspondingText = d3
             .select(event.currentTarget.parentNode.parentNode)
             .selectAll('text')
-            .filter((textData: any) => (textData as TextDatum)?.data?.word === d.word)
+            .filter((textData) => (textData as TextDatum)?.data?.word === (d as StockItem).word)
           correspondingText.style('visibility', 'hidden')
         })
 
