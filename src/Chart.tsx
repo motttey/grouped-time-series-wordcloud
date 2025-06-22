@@ -135,8 +135,8 @@ function Chart(props: Props) {
         .style('font-weight', 'Impact')
         .style('opacity', (_, i) => (i % 2 === 0 ? 1 : 0))
         .style('pointer-events', (_, i) => (i % 2 === 0 ? 'visible' : 'none'))
-        .text((d: any) => {
-          return data[d]['word'].split('T')[0].split('-').slice(1).join('/')
+        .text((d) => {
+          return data[timeStampList.indexOf(d)]['word'].split('T')[0].split('-').slice(1).join('/')
         })
 
       timelineSvg
@@ -238,7 +238,7 @@ function Chart(props: Props) {
           'd',
           d3
             .line<StockItem | undefined>()
-            .x((d, i) => xScale(i))
+            .x((_d, i) => xScale(i))
             .y((d) => (d ? yScale(d.close as number) : 0))(timeSeries),
         )
 
@@ -362,7 +362,10 @@ function Chart(props: Props) {
       const topStockItems = allStockItems.slice(0, topStockItemsNum)
 
       if (!childLeaves) return
-      const updateText = treemapSvg.select('g#treemap').selectAll('text').data(childLeaves)
+      const updateText = treemapSvg
+        .select('g#treemap')
+        .selectAll('text')
+        .data(childLeaves as TreeMapData[])
 
       const enterText = updateText.enter().append('text').attr('class', 'text')
 
@@ -371,15 +374,18 @@ function Chart(props: Props) {
       text
         .transition()
         .duration(transitionMax)
-        .style('font-size', (d: any) => {
-          return d3.min([d3.max([d.data.size, fontSizeMin]), fontSizeMax]).toString() + 'px'
+        .style('font-size', (d) => {
+          const size = d.data.size || 0
+          const maxSize = d3.max([size, fontSizeMin]) || fontSizeMin
+          const fontSize = d3.min([maxSize, fontSizeMax]) || fontSizeMin
+          return fontSize.toString() + 'px'
         })
         .attr('fill', (d) => {
           return fetchThemeColor(d?.parent?.data?.word || '', parentNames)
         })
         .attr('text-anchor', 'middle')
         .style('font-weight', 700)
-        .attr('transform', (d: any) => {
+        .attr('transform', (d) => {
           return (
             'translate(' +
             [d.x0 + (d.x1 - d.x0) / 2 - marginSparkLine, d.y0 + (d.y1 - d.y0) / 2 - marginSparkLine] +
