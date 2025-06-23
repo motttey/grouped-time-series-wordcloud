@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from 'react'
 import * as d3 from 'd3'
-import { MarketDataNode as IMarketDataNode, StockItem } from './types/stock'
+import { CategoryNode, MarketDataNode as IMarketDataNode, StockItem } from './types/stock'
 
 interface MarketDataNode extends IMarketDataNode {
   code: string
@@ -19,10 +19,7 @@ interface Props {
 }
 
 interface TextDatum {
-  data?: {
-    word: string
-    [key: string]: any
-  }
+  data?: CategoryNode
 }
 
 const width = 1000
@@ -58,8 +55,8 @@ function Chart(props: Props) {
   const [specificTimeData, setSpecificTimeData] = useState<MarketDataNode>()
 
   useEffect(() => {
-    timelineSvgRef.current = d3.select<SVGSVGElement, any>('svg#timelineSvg')
-    treemapSvgRef.current = d3.select<SVGSVGElement, any>('svg#treemapSvg')
+    timelineSvgRef.current = d3.select<SVGSVGElement, undefined>('svg#timelineSvg')
+    treemapSvgRef.current = d3.select<SVGSVGElement, undefined>('svg#treemapSvg')
   }, [])
 
   useEffect(() => {
@@ -380,7 +377,7 @@ function Chart(props: Props) {
         })
         .attr('text-anchor', 'middle')
         .style('font-weight', 700)
-        .style('visibility', (d: TextDatum) => {
+        .style('visibility', (d) => {
           return !topStockItems.some((item) => item.word === d.data?.word) ? 'hidden' : 'visible'
         })
         .attr('transform', (d) => {
