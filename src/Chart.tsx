@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import * as d3 from 'd3'
 import { MarketDataNode as IMarketDataNode, StockItem } from './types/stock'
 
@@ -7,14 +7,10 @@ interface MarketDataNode extends IMarketDataNode {
   depth?: number
   volume?: number
   size?: number
+  index?: string | undefined
 }
 
-interface TreeMapData extends d3.HierarchyNode<MarketDataNode> {
-  x0: number
-  x1: number
-  y0: number
-  y1: number
-}
+interface TreeMapData extends d3.HierarchyRectangularNode<MarketDataNode> {}
 
 interface Props {
   updateIndex: (index: number) => void
@@ -312,12 +308,11 @@ function Chart(props: Props) {
         .sort((a, b) => {
           return (a.data.volume || 0) - (b.data.volume || 0)
         })
-        .eachBefore((d: any) => {
+        .eachBefore((d) => {
           // 各ノードの訪問前にインデックスを計算する
-          d.index = d.parent ? d.parent.index + '.' + d.parent.children.indexOf(d) : '0'
+          d.data.index = d.parent ? d.parent.data.index + '.' + (d.parent?.children?.indexOf(d) ?? 0) : '0'
         })
-
-      root.sum((d) => d.size || 0)
+        .sum((d) => d.size || 0)
 
       d3.treemap().size([width, height]).padding(1).round(true)(root as any)
 
@@ -385,6 +380,9 @@ function Chart(props: Props) {
         })
         .attr('text-anchor', 'middle')
         .style('font-weight', 700)
+        .style('visibility', (d: TextDatum) => {
+          return !topStockItems.some((item) => item.word === d.data?.word) ? 'hidden' : 'visible'
+        })
         .attr('transform', (d) => {
           return (
             'translate(' +
@@ -399,10 +397,6 @@ function Chart(props: Props) {
             ? d.data.word
             : d?.data?.word?.slice(0, maxLabelLength - 1) + '...'
         })
-
-      text.style('visibility', (d: TextDatum) => {
-        return !topStockItems.some((item) => item.word === d.data?.word) ? 'hidden' : 'visible'
-      })
 
       childLeaves.forEach((d, _) => {
         const parent = d?.parent?.data?.word
