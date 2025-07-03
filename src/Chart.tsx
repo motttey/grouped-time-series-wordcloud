@@ -299,7 +299,7 @@ function Chart(props: Props) {
       // チャートの中に何個点を描画するか
       const chartSegmentLength = Math.ceil(data.length / 1.5)
 
-      const root: d3.HierarchyNode<MarketDataNode> = d3
+      const root = d3
         .hierarchy(specificTimeData)
         .sum((d: MarketDataNode) => d.size || 0)
         .sort((a, b) => {
@@ -311,7 +311,9 @@ function Chart(props: Props) {
         })
         .sum((d) => d.size || 0)
 
-      d3.treemap().size([width, height]).padding(1).round(true)(root as any)
+      const treemap = d3.treemap().size([width, height]).padding(1).round(true)
+
+      treemap(root as d3.HierarchyNode<unknown>)
 
       const parentNames = specificTimeData.children?.map((d) => d.word) || []
 
