@@ -299,17 +299,14 @@ function Chart(props: Props) {
       // チャートの中に何個点を描画するか
       const chartSegmentLength = Math.ceil(data.length / 1.5)
 
+      // データのインデックス順（位置）を固定 (sortしない)
       const root = d3
         .hierarchy(specificTimeData)
         .sum((d: MarketDataNode) => d.size || 0)
-        .sort((a, b) => {
-          return (a.data.volume || 0) - (b.data.volume || 0)
-        })
         .eachBefore((d) => {
           // 各ノードの訪問前にインデックスを計算する
           d.data.index = d.parent ? d.parent.data.index + '.' + (d.parent?.children?.indexOf(d) ?? 0) : '0'
         })
-        .sum((d) => d.size || 0)
 
       const treemap = d3.treemap().size([width, height]).padding(1).round(true)
 
@@ -317,7 +314,6 @@ function Chart(props: Props) {
 
       const parentNames = specificTimeData.children?.map((d) => d.word) || []
 
-      // Sort childLeaves by volume
       const childLeaves = root
         .leaves()
         .sort(
@@ -327,7 +323,9 @@ function Chart(props: Props) {
 
       const treemapSvg = treemapSvgRef.current
       if (!treemapSvg) return
-      const updateRect = treemapSvg.select('g#treemap').selectAll('rect').data(root)
+
+      // root.descendants() または root をそのままデータバインド
+      const updateRect = treemapSvg.select('g#treemap').selectAll('rect').data(root.descendants())
 
       const enterRect = updateRect.enter().append('rect').attr('class', 'rect') as any
 
@@ -345,7 +343,7 @@ function Chart(props: Props) {
         })
         .style('stroke-width', strokeWidth.toString() + 'px')
         .style('opacity', (d: MarketDataNode) => {
-          return d.depth || 0 <= 1 ? 1 : 0
+          return (d.depth || 0) <= 1 ? 1 : 0 // 不等号のパースエラー防止のため修正
         })
 
       const allStockItems = specificTimeData.children.reduce(
